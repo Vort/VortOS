@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{30CC4278-0FA8-47D5-81D2-D4BC790125E9}</ProjectGuid>
+    <RootNamespace>DriverPack</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.bat</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ATA.cpp" />
+    <ClCompile Include="Benchmark.cpp" />
+    <ClCompile Include="BochsVideo.cpp" />
+    <ClCompile Include="Cache.cpp" />
+    <ClCompile Include="CDFS.cpp" />
+    <ClCompile Include="CLGD5446Video.cpp" />
+    <ClCompile Include="Cursor.cpp" />
+    <ClCompile Include="DebugConsole.cpp" />
+    <ClCompile Include="Desktop.cpp" />
+    <ClCompile Include="DMA.cpp" />
+    <ClCompile Include="FastReboot.cpp" />
+    <ClCompile Include="FAT.cpp" />
+    <ClCompile Include="FileSys.cpp" />
+    <ClCompile Include="FillBenchmark.cpp" />
+    <ClCompile Include="Floppy.cpp" />
+    <ClCompile Include="Font.cpp" />
+    <ClCompile Include="Hello.cpp" />
+    <ClCompile Include="i8042.cpp" />
+    <ClCompile Include="Init.cpp" />
+    <ClCompile Include="Loader.cpp" />
+    <ClCompile Include="OpNewDel.cpp" />
+    <ClCompile Include="Partition.cpp" />
+    <ClCompile Include="PCI.cpp" />
+    <ClCompile Include="PCIList.cpp" />
+    <ClCompile Include="ProcInfo.cpp" />
+    <ClCompile Include="PS2Keyb.cpp" />
+    <ClCompile Include="PS2Mouse.cpp" />
+    <ClCompile Include="Reboot.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="S3Trio64Video.cpp" />
+    <ClCompile Include="SAnim.cpp" />
+    <ClCompile Include="Serial.cpp" />
+    <ClCompile Include="SerialMouse.cpp" />
+    <ClCompile Include="String2.cpp" />
+    <ClCompile Include="SurfMgr.cpp" />
+    <ClCompile Include="Test.cpp" />
+    <ClCompile Include="VGAVideo.cpp" />
+    <ClCompile Include="Viewer.cpp" />
+    <ClCompile Include="VMwareVideo.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="API.h" />
+    <ClInclude Include="Array2.h" />
+    <ClInclude Include="BitOp.h" />
+    <ClInclude Include="Color.h" />
+    <ClInclude Include="CursorTexture.h" />
+    <ClInclude Include="Defs.h" />
+    <ClInclude Include="Font_Arial.h" />
+    <ClInclude Include="GenericVideo.h" />
+    <ClInclude Include="KeCalls.h" />
+    <ClInclude Include="Notifications.h" />
+    <ClInclude Include="NumericConverter.h" />
+    <ClInclude Include="Random.h" />
+    <ClInclude Include="Rect.h" />
+    <ClInclude Include="SMArray.h" />
+    <ClInclude Include="SmartPtr.h" />
+    <ClInclude Include="Storage.h" />
+    <ClInclude Include="String2.h" />
+    <ClInclude Include="Symbols.h" />
+    <ClInclude Include="UserCalls.h" />
+    <ClInclude Include="VideoStruct.h" />
+    <ClInclude Include="VitrualKey.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{4E620539-F58E-4055-B0AC-54A07F47B6D6}</ProjectGuid>
+    <RootNamespace>Kernel</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.bat</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(ProjectDir)Library\;</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="BitOp.cpp" />
+    <ClCompile Include="GDT.cpp" />
+    <ClCompile Include="Global.cpp" />
+    <ClCompile Include="IDT.cpp" />
+    <ClCompile Include="IntManager.cpp" />
+    <ClCompile Include="Kernel.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="OpNewDel.cpp" />
+    <ClCompile Include="PDE.cpp" />
+    <ClCompile Include="PhysMemManager.cpp" />
+    <ClCompile Include="PTE.cpp" />
+    <ClCompile Include="Task.cpp" />
+    <ClCompile Include="Thread.cpp" />
+    <ClCompile Include="Tss.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CRC32.h" />
+    <ClInclude Include="FString.h" />
+    <ClInclude Include="Library\Array2.h" />
+    <ClInclude Include="BitOp.h" />
+    <ClInclude Include="CallRequest.h" />
+    <ClInclude Include="ChainMapping.h" />
+    <ClInclude Include="Library\Defs.h" />
+    <ClInclude Include="Descriptor.h" />
+    <ClInclude Include="Gate.h" />
+    <ClInclude Include="GDT.h" />
+    <ClInclude Include="Global.h" />
+    <ClInclude Include="Heap.h" />
+    <ClInclude Include="IDT.h" />
+    <ClInclude Include="IntManager.h" />
+    <ClInclude Include="Intrinsics.h" />
+    <ClInclude Include="Kernel.h" />
+    <ClInclude Include="List.h" />
+    <ClInclude Include="MultiMappedChain.h" />
+    <ClInclude Include="Notification.h" />
+    <ClInclude Include="NotificationQueue.h" />
+    <ClInclude Include="OpNewDel.h" />
+    <ClInclude Include="PageChain.h" />
+    <ClInclude Include="PagedQueue.h" />
+    <ClInclude Include="PD.h" />
+    <ClInclude Include="PDE.h" />
+    <ClInclude Include="PhysMemManager.h" />
+    <ClInclude Include="PT.h" />
+    <ClInclude Include="PTE.h" />
+    <ClInclude Include="SingleMappedChain.h" />
+    <ClInclude Include="Library\SmartPtr.h" />
+    <ClInclude Include="Task.h" />
+    <ClInclude Include="Thread.h" />
+    <ClInclude Include="Tss.h" />
+    <ClInclude Include="UniPtr.h" />
+    <ClInclude Include="UserHeap.h" />
+    <ClInclude Include="VirtMemManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="my_memcpy.ob_" />
+    <None Include="my_memset.ob_" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

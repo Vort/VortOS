@@ -1,0 +1,15 @@
+romimage: file=$BXSHARE/BIOS-bochs-latest
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+
+megs: 16
+cpu: count=1, ips=30000000, reset_on_triple_fault=1
+clock: sync=realtime, time0=local
+
+#mouse: enabled=0, type=serial
+#com1: enabled=1, mode=mouse
+
+#ata0-master: type=disk, path="hd.img", mode=flat, cylinders=4, heads=16, spt=63
+ata1-master: type=cdrom, path=os.iso, status=inserted
+floppya: 1_44=os.ima, status=inserted
+#boot: floppy
+boot: cdrom

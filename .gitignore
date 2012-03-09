@@ -1,0 +1,15 @@
+/Kernel/*.bi_
+/Kernel/*.bin
+/Kernel/Release
+/DriverPack/*.bin
+/DriverPack/*.bi_
+/DriverPack/Release
+/Image/*.iso
+/Image/*.ima
+/Image/CDRoot/*.bin
+/Image/FloppyRoot/*.bin
+*.suo
+*.obj
+*.pdb
+*.sdf
+*.opensdf
