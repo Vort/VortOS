@@ -5,6 +5,8 @@ cl.exe -c -GS- -GL -GF -Ox -Oy -O2 -Zi -Fo"%outdir%\\" /Fd"%outdir%\vc100.pdb" m
 link.exe -debug -nod -ltcg -opt:ref -fixed -base:0x20000 -entry:Entry -subsystem:windows -out:%outdir%\kernel.bi_ -filealign:4096 %outdir%\*.obj *.obj
 cd %outdir%
 ..\KernelStripper.exe
+mkdir ..\..\Image\FloppyRoot
+mkdir ..\..\Image\CDRoot
 copy Kernel.bin ..\..\Image\FloppyRoot
 copy Kernel.bin ..\..\Image\CDRoot
 cd ..\..\Image\

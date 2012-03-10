@@ -122,14 +122,15 @@ void Entry()
 		ErrIf(true);
 	}
 
-	dword DriversCount = BootInfo[1] - 1;
+	dword BootType = BootInfo[1];
+	dword DriversCount = BootInfo[2] - 1;
 	CDriverInfo DriverInfos[12];
 
 	for (dword i = 0; i < DriversCount; i++)
 	{
-		DriverInfos[i].m_BytesSize = BootInfo[2 + (i + 1) * 3];
-		DriverInfos[i].m_LoadPage  = BootInfo[3 + (i + 1) * 3];
-		char* Name = PC(BootInfo[4 + (i + 1) * 3]);
+		DriverInfos[i].m_BytesSize = BootInfo[3 + (i + 1) * 3];
+		DriverInfos[i].m_LoadPage  = BootInfo[4 + (i + 1) * 3];
+		char* Name = PC(BootInfo[5 + (i + 1) * 3]);
 
 		for (int j = 0;; j++)
 		{
@@ -172,6 +173,7 @@ void Entry()
 
 	CIntManager IM(PMM, KernelTask.GetTSS().GetSelector());
 
-	CKernel K(KernelTask, PMM, IM, GDT, IM.GetIDT(), DriverInfos, DriversCount);
+	CKernel K(KernelTask, PMM, IM, GDT, IM.GetIDT(),
+		BootType, DriverInfos, DriversCount);
 }
 // ----------------------------------------------------------------------------

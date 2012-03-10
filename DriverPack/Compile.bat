@@ -4,7 +4,7 @@ del %outdir%\* /Q
 
 set linkparams=-nologo -nod -fixed -opt:ref -entry:Entry -subsystem:windows ..\my_memcpy.obj ..\my_memset.obj OpNewDel.obj String2.obj
 
-cl.exe -c -GR- -GS- -Gs999999999 -Gy -Ox -Oy -O2 -Oi- -fp:fast -Fo"%outdir%\\" Hello.cpp Loader.cpp Test.cpp i8042.cpp PS2Keyb.cpp PS2Mouse.cpp Floppy.cpp DMA.cpp FileSys.cpp Init.cpp Viewer.cpp OpNewDel.cpp String2.cpp Cursor.cpp Font.cpp ProcInfo.cpp Desktop.cpp PCI.cpp Renderer.cpp SurfMgr.cpp DebugConsole.cpp Serial.cpp SerialMouse.cpp BochsVideo.cpp VMwareVideo.cpp VGAVideo.cpp PCIList.cpp ATA.cpp CLGD5446Video.cpp FAT.cpp Cache.cpp Partition.cpp Reboot.cpp SAnim.cpp FillBenchmark.cpp CDFS.cpp S3Trio64Video.cpp Benchmark.cpp
+cl.exe -c -GR- -GS- -Gs999999999 -Gy -Ox -Oy -O2 -Oi- -fp:fast -Fo"%outdir%\\" Hello.cpp Loader.cpp Test.cpp i8042.cpp PS2Keyb.cpp PS2Mouse.cpp Floppy.cpp DMA.cpp FileSys.cpp Init.cpp Viewer.cpp OpNewDel.cpp String2.cpp Cursor.cpp Font.cpp ProcInfo.cpp Desktop.cpp PCI.cpp Renderer.cpp SurfMgr.cpp DebugConsole.cpp Serial.cpp SerialMouse.cpp BochsVideo.cpp VMwareVideo.cpp VGAVideo.cpp PCIList.cpp ATA.cpp CLGD5446Video.cpp FAT.cpp Cache.cpp Partition.cpp Reboot.cpp SAnim.cpp FillBenchmark.cpp CDFS.cpp S3Trio64Video.cpp Benchmark.cpp SysInit.cpp
 cd %outdir%
 link.exe %linkparams% -out:S3Trio64Video.bi_ S3Trio64Video.obj
 link.exe %linkparams% -out:CDFS.bi_ CDFS.obj
@@ -19,6 +19,7 @@ link.exe %linkparams% -out:Cursor.bi_ Cursor.obj
 link.exe %linkparams% -out:Viewer.bi_ Viewer.obj
 link.exe %linkparams% -out:Hello.bi_ Hello.obj
 link.exe %linkparams% -out:Loader.bi_ Loader.obj
+link.exe %linkparams% -out:SysInit.bi_ SysInit.obj
 link.exe %linkparams% -out:Test.bi_ Test.obj
 link.exe %linkparams% -out:i8042.bi_ i8042.obj
 link.exe %linkparams% -out:PS2Mouse.bi_ PS2Mouse.obj
@@ -62,6 +63,7 @@ link.exe %linkparams% -out:CLGD5446Video.bi_ CLGD5446Video.obj
 ..\DriverStripper.exe PCI.bi_ "|3|" "(0)"
 ..\DriverStripper.exe ATA.bi_ "|3|" "(0)"
 
+..\DriverStripper.exe SysInit.bi_ "|4|" "(0)"
 ..\DriverStripper.exe Loader.bi_ "|4|" "(0)"
 ..\DriverStripper.exe Init.bi_ "|4|" "(0)"
 
@@ -87,6 +89,8 @@ link.exe %linkparams% -out:CLGD5446Video.bi_ CLGD5446Video.obj
 
 ..\DriverStripper.exe Test.bi_ "|10|" "(2)"
 
+mkdir ..\..\Image\FloppyRoot
+mkdir ..\..\Image\CDRoot
 copy *.bin ..\..\Image\FloppyRoot\
 copy *.bin ..\..\Image\CDRoot\
 

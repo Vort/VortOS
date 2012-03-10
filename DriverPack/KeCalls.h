@@ -397,4 +397,12 @@ dword KeGetNextProcessInfo(dword PrevPID, dword& UsedPageCount,
 
 	return Data.NextPID;
 }
+
+// ----------------------------------------------------------------------------
+dword KeGetBootType()
+{
+	dword BootType;
+	GenericKeCall(45, 0, 4, 0, PB(&BootType));
+	return BootType;
+}
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

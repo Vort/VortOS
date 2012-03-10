@@ -34,7 +34,8 @@ void RawOutString(const char* Msg, dword X, dword Y, byte Color);
 
 // ----------------------------------------------------------------------------
 CKernel::CKernel(CTask& KernelTask, CPhysMemManager& PMM, CIntManager& IM,
-	CGDT& GDT, CIDT& IDT, CDriverInfo* DriverInfos, dword DriversCount)
+	CGDT& GDT, CIDT& IDT, dword BootType,
+	CDriverInfo* DriverInfos, dword DriversCount)
 	: m_KernelTask(KernelTask), m_PMM(PMM), m_GDT(GDT), m_IDT(IDT), m_IM(IM)
 {
 	m_TickCount = 0;
@@ -52,6 +53,7 @@ CKernel::CKernel(CTask& KernelTask, CPhysMemManager& PMM, CIntManager& IM,
 
 	AddThread(true, g_IdleImage, sizeof(g_IdleImage), "[Idle]");
 
+	m_BootType = BootType;
 	m_PreloadedDriversCount = DriversCount;
 	for (dword i = 0; i < DriversCount; i++)
 	{
@@ -838,6 +840,15 @@ void CKernel::OnKeGetNextProcessInfo()
 }
 
 // ----------------------------------------------------------------------------
+void CKernel::OnKeGetBootType()
+{
+	if (m_KeCallInDataSize != 0) return;
+	if (m_KeCallOutDataSize != 4) return;
+
+	(PD(m_KeCallOutDataBuf))[0] = m_BootType;
+}
+
+// ----------------------------------------------------------------------------
 void CKernel::OnKeCall(dword FunctionIndex)
 {
 	m_KeCallRealOutDataSize = m_KeCallOutDataSize;
@@ -882,6 +893,7 @@ void CKernel::OnKeCall(dword FunctionIndex)
 	case 42: OnKeGetPreloadedDriversCount(); break;
 	case 43: OnKeGetTime(); break;
 	case 44: OnKeGetNextProcessInfo(); break;
+	case 45: OnKeGetBootType(); break;
 	}
 }
 

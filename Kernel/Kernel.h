@@ -39,7 +39,8 @@ class CKernel
 {
 public:
 	CKernel(CTask& KernelTask, CPhysMemManager& PMM, CIntManager& IM,
-		CGDT& GDT, CIDT& IDT, CDriverInfo* DriverInfos, dword DriversCount);
+		CGDT& GDT, CIDT& IDT, dword BootType,
+		CDriverInfo* DriverInfos, dword DriversCount);
 
 	void InitPreloadedDrv(dword Index, CDriverInfo& DriverInfo);
 
@@ -105,6 +106,7 @@ public:
 	void OnKeGetPreloadedDriversCount();
 	void OnKeGetTime();
 	void OnKeGetNextProcessInfo();
+	void OnKeGetBootType();
 
 private:
 	dword m_TickCount;
@@ -113,6 +115,7 @@ private:
 	dword m_RebootLevel;
 	dword m_RebootLevelStartTick;
 
+	dword m_BootType;
 	dword m_PreloadedDriversCount;
 
 	CTask& m_KernelTask;

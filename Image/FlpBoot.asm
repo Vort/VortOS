@@ -110,6 +110,7 @@ WaitLoop:
 
 ; -------------------------------------------
    Magic	      dd 'linf'
+   BootType	      dd 'fdd '
    FilesCount	      dd 7
 
    File1Size	      dd 0

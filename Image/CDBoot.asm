@@ -278,6 +278,7 @@ DiskAddressPacket:
 
 ; -----------------------------------------------
    Magic	       dd 'linf'
+   BootType	       dd 'cd  '
    FilesCount	       dd 6
 
    File1Size	       dd 0

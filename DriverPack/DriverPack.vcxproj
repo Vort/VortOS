@@ -109,6 +109,7 @@
     <ClCompile Include="SerialMouse.cpp" />
     <ClCompile Include="String2.cpp" />
     <ClCompile Include="SurfMgr.cpp" />
+    <ClCompile Include="SysInit.cpp" />
     <ClCompile Include="Test.cpp" />
     <ClCompile Include="VGAVideo.cpp" />
     <ClCompile Include="Viewer.cpp" />
