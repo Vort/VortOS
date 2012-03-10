@@ -168,12 +168,4 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="my_memcpy.ob_">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="my_memset.ob_">
-      <Filter>Source Files</Filter>
-    </None>
-  </ItemGroup>
 </Project>

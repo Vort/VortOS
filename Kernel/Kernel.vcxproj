@@ -95,10 +95,6 @@
     <ClInclude Include="UserHeap.h" />
     <ClInclude Include="VirtMemManager.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="my_memcpy.ob_" />
-    <None Include="my_memset.ob_" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
