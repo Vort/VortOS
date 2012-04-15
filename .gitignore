@@ -1,14 +1,16 @@
+/Kernel/Release/*
 /Kernel/*.bi_
 /Kernel/*.bin
+/DriverPack/Release/*
 /DriverPack/*.bin
 /DriverPack/*.bi_
 /Image/*.iso
 /Image/*.ima
-/Image/CDRoot/*.bin
-/Image/FloppyRoot/*.bin
+/Image/CDRoot/*
+/Image/FloppyRoot/*
+/Tools/*/Release
 
 ipch
-Release
 Debug
 
 *.suo

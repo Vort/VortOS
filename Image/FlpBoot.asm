@@ -142,7 +142,7 @@ WaitLoop:
    File4Name	      db 'Cache.bin', 0
    File5Name	      db 'DMA.bin', 0
    File6Name	      db 'Floppy.bin', 0
-   File7Name	      db 'Loader.bin', 0
+   File7Name	      db 'SysInit.bin', 0
 
 ; -------------------------------------------
    File1FATName       db 'KERNEL  BIN'
@@ -151,6 +151,6 @@ WaitLoop:
    File4FATName       db 'CACHE   BIN'
    File5FATName       db 'DMA     BIN'
    File6FATName       db 'FLOPPY  BIN'
-   File7FATName       db 'LOADER  BIN'
+   File7FATName       db 'SYSINIT BIN'
    LastFATName:
 ; ===========================================

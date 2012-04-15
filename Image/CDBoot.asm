@@ -306,7 +306,7 @@ DiskAddressPacket:
    File3Name	       db 'CDFS.bin', 0
    File4Name	       db 'Cache.bin', 0
    File5Name	       db 'ATA.bin', 0
-   File6Name	       db 'Loader.bin', 0
+   File6Name	       db 'SysInit.bin', 0
 
 ; -----------------------------------------------
 ZF:

@@ -69,9 +69,6 @@
     <ClCompile Include="Init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Loader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="OpNewDel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
