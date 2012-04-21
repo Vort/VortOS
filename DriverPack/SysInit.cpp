@@ -66,7 +66,12 @@ public:
 		CreateProcess("Cursor.bin");
 		CreateProcess("Desktop.bin");
 		CreateProcess("Font.bin");
-		CreateProcess("Init.bin");
+
+		KeWaitForSymbol(SmCursor_Ready);
+		KeWaitForSymbol(SmDesktop_Ready);
+		KeWaitForSymbol(SmFont_Ready);
+		KeSetSymbol(Sm_InitStage2);
+
 		CreateProcess("Viewer.bin");
 	}
 
