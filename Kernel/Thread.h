@@ -108,7 +108,7 @@ public:
 	void WaitForNotificationsOrCallRequests();
 	void StopWaitingForCallResponse();
 	void WaitForTicks(dword TickCount);
-	void WaitForSymbol(dword Symbol);
+	void WaitForSymbol(dword symbol1, dword symbol2);
 
 	void OnSymbol(dword Symbol);
 
@@ -184,7 +184,8 @@ private:
 	dword m_SwitchesCount;
 
 	dword m_TicksLeft;
-	dword m_WaitingSymbol;
+	dword m_WaitingSymbol1;
+	dword m_WaitingSymbol2;
 	EThreadWaitType m_WaitingFor;
 	CSmartPtr<CCallRequest> m_WaitingCallInfo;
 
@@ -202,5 +203,7 @@ public: // <-- Temp
 	dword m_CltRspBuf;
 	dword m_CltRspBufSize;
 	dword m_CltCallOutBuf;
+
+	dword m_SymWaitOutBufVPtr;
 };
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

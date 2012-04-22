@@ -547,12 +547,38 @@ void CKernel::OnKeSetSymbol()
 // ----------------------------------------------------------------------------
 void CKernel::OnKeWaitForSymbol()
 {
-	if (m_KeCallInDataSize != 4) return;
-	if (m_KeCallOutDataSize != 0) return;
+	if (m_KeCallInDataSize == 4)
+	{
+		if (m_KeCallOutDataSize != 0)
+			return;
 
-	dword Symbol = (PD(m_KeCallInDataBuf))[0];
-	if (!HasSymbol(Symbol))
-		m_ActiveThread->WaitForSymbol(Symbol);
+		dword symbol = (PD(m_KeCallInDataBuf))[0];
+		if (!HasSymbol(symbol))
+		{
+			m_ActiveThread->m_SymWaitOutBufVPtr = 0;
+			m_ActiveThread->WaitForSymbol(symbol, symbol);
+		}
+	}
+	else if (m_KeCallInDataSize == 8)
+	{
+		if (m_KeCallOutDataSize != 4)
+			return;
+
+		dword symbol1 = (PD(m_KeCallInDataBuf))[0];
+		dword symbol2 = (PD(m_KeCallInDataBuf))[1];
+		bool hasSymbol1 = HasSymbol(symbol1);
+		bool hasSymbol2 = HasSymbol(symbol2);
+		if (hasSymbol1)
+			(PD(m_KeCallOutDataBuf))[0] = symbol1;
+		else if (hasSymbol2)
+			(PD(m_KeCallOutDataBuf))[0] = symbol2;
+		else
+		{
+			(PD(m_KeCallOutDataBuf))[0] = 0;
+			m_ActiveThread->m_SymWaitOutBufVPtr = dword(m_KeCallOutDataVPtr);
+			m_ActiveThread->WaitForSymbol(symbol1, symbol2);
+		}
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -849,6 +875,18 @@ void CKernel::OnKeGetBootType()
 }
 
 // ----------------------------------------------------------------------------
+void CKernel::OnKeResetSymbol()
+{
+	if (m_KeCallInDataSize != 4) return;
+	if (m_KeCallOutDataSize != 1) return;
+
+	dword Symbol = (PD(m_KeCallInDataBuf))[0];
+	byte Success = ResetSymbol(Symbol) ? 1 : 0;
+
+	m_KeCallOutDataBuf[0] = Success;
+}
+
+// ----------------------------------------------------------------------------
 void CKernel::OnKeCall(dword FunctionIndex)
 {
 	m_KeCallRealOutDataSize = m_KeCallOutDataSize;
@@ -894,6 +932,7 @@ void CKernel::OnKeCall(dword FunctionIndex)
 	case 43: OnKeGetTime(); break;
 	case 44: OnKeGetNextProcessInfo(); break;
 	case 45: OnKeGetBootType(); break;
+	case 46: OnKeResetSymbol(); break;
 	}
 }
 
@@ -904,6 +943,20 @@ bool CKernel::SetSymbol(dword Symbol)
 	{
 		m_Symbols.PushBack(Symbol);
 		return true;
+	}
+	return false;
+}
+
+// ----------------------------------------------------------------------------
+bool CKernel::ResetSymbol(dword Symbol)
+{
+	for (dword i = 0; i < m_Symbols.Size(); i++)
+	{
+		if (m_Symbols[i] == Symbol)
+		{
+			m_Symbols.Delete(i);
+			return true;
+		}
 	}
 	return false;
 }

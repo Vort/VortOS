@@ -220,6 +220,17 @@ void KeWaitForSymbol(dword Symbol)
 }
 
 // ----------------------------------------------------------------------------
+dword KeWaitForSymbol(dword symbol1, dword symbol2)
+{
+	dword in[2];
+	in[0] = symbol1;
+	in[1] = symbol2;
+	dword triggeredSymbol;
+	GenericKeCall(19, 8, 4, (byte*)in, (byte*)&triggeredSymbol);
+	return triggeredSymbol;
+}
+
+// ----------------------------------------------------------------------------
 void KeInPortWordArray(word Port, dword WordCount, word* Buf)
 {
 	dword ReqBuf[2];
@@ -404,5 +415,13 @@ dword KeGetBootType()
 	dword BootType;
 	GenericKeCall(45, 0, 4, 0, PB(&BootType));
 	return BootType;
+}
+
+// ----------------------------------------------------------------------------
+bool KeResetSymbol(dword Symbol)
+{
+	byte Success;
+	GenericKeCall(46, 4, 1, PB(&Symbol), &Success);
+	return Success;
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

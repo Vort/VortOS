@@ -49,6 +49,7 @@ public:
 	void ProcessInt30Request();
 
 	bool SetSymbol(dword Symbol);
+	bool ResetSymbol(dword Symbol);
 	bool HasSymbol(dword Symbol);
 
 	bool AddThread(bool IsKernel, const CUniPtr& Image,
@@ -107,6 +108,7 @@ public:
 	void OnKeGetTime();
 	void OnKeGetNextProcessInfo();
 	void OnKeGetBootType();
+	void OnKeResetSymbol();
 
 private:
 	dword m_TickCount;

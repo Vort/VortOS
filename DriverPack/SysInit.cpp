@@ -56,7 +56,15 @@ public:
 			return;
 		}
 		CreateProcess("PCI.bin");
+
 		CreateProcess("BochsVideo.bin");
+		KeWaitForSymbol(SmVideo_OK, SmVideo_Fail);
+		//if (KeWaitForSymbol(SmVideo_OK, SmVideo_Fail) == SmVideo_Fail)
+		//{
+		//     KeResetSymbol(SmVideo_Fail);
+		//     CreateProcess("CLGD5446Video.bin");
+		//     if (...)
+		//}
 		CreateProcess("CLGD5446Video.bin");
 		CreateProcess("S3Trio64Video.bin");
 		CreateProcess("VMwareVideo.bin");

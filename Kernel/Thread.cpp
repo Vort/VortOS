@@ -292,14 +292,24 @@ void CThread::SwitchTo()
 void CThread::OnSymbol(dword Symbol)
 {
 	if (m_WaitingFor == ThreadWaitType_Symbol)
-		if (m_WaitingSymbol == Symbol)
+		if (m_WaitingSymbol1 == Symbol || m_WaitingSymbol2 == Symbol)
+		{
+			if (m_SymWaitOutBufVPtr != null)
+			{
+				m_VMM->MemCopyPhysToVirt(
+					(byte*)&Symbol,
+					(byte*)m_SymWaitOutBufVPtr, 4);
+			}
+
 			m_WaitingFor = ThreadWaitType_Nothing;
+		}
 }
 
 // ----------------------------------------------------------------------------
-void CThread::WaitForSymbol(dword Symbol)
+void CThread::WaitForSymbol(dword symbol1, dword symbol2)
 {
-	m_WaitingSymbol = Symbol;
+	m_WaitingSymbol1 = symbol1;
+	m_WaitingSymbol2 = symbol2;
 	m_WaitingFor = ThreadWaitType_Symbol;
 }
 

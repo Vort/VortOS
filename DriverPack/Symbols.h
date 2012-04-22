@@ -21,6 +21,8 @@
 #define SmDesktop_Terminated 0x5AAB30D0
 #define SmSurfMgr_Terminated 0xCB480962
 
+#define SmVideo_OK 0x25030598
+#define SmVideo_Fail 0x52A323ED
 #define SmVideo_Identify 0x63A53A2B
 #define SmVideo_Info 0x61918A19
 
