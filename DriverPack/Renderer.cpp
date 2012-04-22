@@ -256,70 +256,7 @@ class CRenderer
 public:
 	CRenderer()
 	{
-		KeEnableNotification(NfVideo_IdentifyResp);
-		KeSetSymbol(SmVideo_Identify);
-		KeWaitTicks(2);
-
-		dword NfCount = KeGetNotificationCount();
-		if (NfCount == 0)
-			return;
-
-		CNotification<0x100> N;
-
-		CArray<dword> VideoIDs(dword(0), NfCount);
-		CArray<dword> VideoPriorities(dword(0), NfCount);
-		CArray<dword> VideoDetected(dword(0), NfCount);
-		for (dword z = 0; z < NfCount; z++)
-		{
-			N.Recv();
-			VideoIDs[z] = N.GetDword(0);
-			VideoPriorities[z] = N.GetDword(1);
-		}
-		KeDisableNotification(NfVideo_IdentifyResp);
-
-		KeEnableNotification(NfVideo_InfoResp);
-		KeSetSymbol(SmVideo_Info);
-		for (dword z = 0; z < NfCount; z++)
-		{
-			N.Recv();
-			dword ID = N.GetDword(0);
-			dword Detected = N.GetDword(1);
-
-			for (dword i = 0; i < NfCount; i++)
-				if (VideoIDs[i] == ID)
-					VideoDetected[i] = Detected;
-		}
-		KeDisableNotification(NfVideo_InfoResp);
-
-		bool AnyDetected = false;
-		for (dword i = 0; i < NfCount; i++)
-			if (VideoDetected[i])
-			{
-				AnyDetected = true;
-				break;
-			}
-
-		if (!AnyDetected)
-			return;
-
-		dword MaxPriorityID = 0;
-		dword Priority = 0xFFFFFFFF;
-		for (dword i = 0; i < NfCount; i++)
-			if (VideoDetected[i])
-				if (VideoPriorities[i] < Priority)
-				{
-					Priority = VideoPriorities[i];
-					MaxPriorityID = VideoIDs[i];
-				}
-
-		byte OutBuf[5];
-		for (dword i = 0; i < NfCount; i++)
-			if (VideoDetected[i])
-			{
-				*PD(OutBuf) = VideoIDs[i];
-				OutBuf[4] = !(MaxPriorityID == VideoIDs[i]);
-				KeNotify(NfVideo_FlowResp, OutBuf, 5);
-			}
+		KeWaitForSymbol(SmVideo_OK);
 
 		byte Caps[2];
 		KeRequestCall(ClVideo_GetCaps, null, 0, Caps, 2);
@@ -361,6 +298,7 @@ public:
 		KeSetSymbol(SmRenderer_Ready);
 
 		bool IsTerminating = false;
+		CNotification<0x100> N;
 		CCallRequest<0x1000> CR;
 
 		for (;;)

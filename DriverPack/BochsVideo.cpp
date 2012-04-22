@@ -1,16 +1,18 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // BochsVideo.cpp
 #include "API.h"
-#include "GenericVideo.h"
 
 // ----------------------------------------------------------------------------
-class CBochsVideo : public CGenericVideo
+class CBochsVideo
 {
 public:
 	CBochsVideo()
 	{
-		if (!Init(0x7BCE8DAD, 0))
+		if (!Detect())
+		{
+			KeSetSymbol(SmVideo_Fail);
 			return;
+		}
 
 		dword Width = 800;
 		dword Height = 600;
@@ -19,9 +21,9 @@ public:
 			Width * Height * 4, 0xE0000000);
 		byte* FB = KeMapSharedMem(FrameBufSMID);
 
-		VBEWrite(0x4, 0x00); 
-		VBEWrite(0x1, Width); 
-		VBEWrite(0x2, Height); 
+		VBEWrite(0x4, 0x00);
+		VBEWrite(0x1, Width);
+		VBEWrite(0x2, Height);
 		VBEWrite(0x3, 32); // BPP
 		VBEWrite(0x4, 0x01 | 0x40);
 
@@ -32,6 +34,8 @@ public:
 		KeEnableCallRequest(ClVideo_GetCaps);
 		KeEnableCallRequest(ClVideo_GetQuantSize);
 		KeEnableNotification(NfKe_TerminateProcess);
+
+		KeSetSymbol(SmVideo_OK);
 
 		CCallRequest<4> CR;
 		CNotification<4> N;

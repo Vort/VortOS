@@ -23,8 +23,6 @@
 
 #define SmVideo_OK 0x25030598
 #define SmVideo_Fail 0x52A323ED
-#define SmVideo_Identify 0x63A53A2B
-#define SmVideo_Info 0x61918A19
 
 #define Sm_InitStage0 0x3208F6AA // All Drivers Loaded
 //#define Sm_InitStage1 0x7407D39F // Video Subsystem Ready

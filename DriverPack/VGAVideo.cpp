@@ -1,7 +1,6 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // VGAVideo.cpp
 #include "API.h"
-#include "GenericVideo.h"
 #include "Random.h"
 
 // ----------------------------------------------------------------------------
@@ -26,14 +25,11 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-class CVGAVideo : public CGenericVideo
+class CVGAVideo
 {
 public:
 	CVGAVideo()
 	{
-		if (!Init(0x89B2D7DA, 2))
-			return;
-
 		dword Width = 640;
 		dword Height = 480;
 
@@ -55,6 +51,8 @@ public:
 		KeEnableCallRequest(ClVideo_UpdateFrameSurface);
 		KeEnableCallRequest(ClVideo_GetQuantSize);
 		KeEnableNotification(NfKe_TerminateProcess);
+
+		KeSetSymbol(SmVideo_OK);
 
 		CCallRequest<0x10> CR;
 		CNotification<4> N;

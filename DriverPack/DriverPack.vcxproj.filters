@@ -155,9 +155,6 @@
     <ClInclude Include="Font_Arial.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GenericVideo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="KeCalls.h">
       <Filter>Header Files</Filter>
     </ClInclude>

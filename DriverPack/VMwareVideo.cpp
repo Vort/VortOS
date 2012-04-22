@@ -1,16 +1,18 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // VMwareVideo.cpp
 #include "API.h"
-#include "GenericVideo.h"
 
 // ----------------------------------------------------------------------------
-class CVMwareVideo : public CGenericVideo
+class CVMwareVideo
 {
 public:
 	CVMwareVideo()
 	{
-		if (!Init(0xEECC9BBB, 0))
+		if (!Detect())
+		{
+			KeSetSymbol(SmVideo_Fail);
 			return;
+		}
 
 		m_ValuePort = m_IndexPort + 1;
 
@@ -28,6 +30,8 @@ public:
 		KeEnableCallRequest(ClVideo_GetCaps);
 		KeEnableCallRequest(ClVideo_GetQuantSize);
 		KeEnableNotification(NfKe_TerminateProcess);
+
+		KeSetSymbol(SmVideo_OK);
 
 		CCallRequest<4> CR;
 		CNotification<4> N;

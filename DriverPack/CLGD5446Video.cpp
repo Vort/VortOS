@@ -1,7 +1,6 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // CLGD5446Video.cpp
 #include "API.h"
-#include "GenericVideo.h"
 
 // ----------------------------------------------------------------------------
 class CUpdateInfo
@@ -14,13 +13,16 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-class CCLGD5446Video : public CGenericVideo
+class CCLGD5446Video
 {
 public:
 	CCLGD5446Video()
 	{
-		if (!Init(0x92808998, 1))
+		if (!Detect())
+		{
+			KeSetSymbol(SmVideo_Fail);
 			return;
+		}
 
 		dword Width = 800;
 		dword Height = 600;
@@ -37,6 +39,8 @@ public:
 		KeEnableCallRequest(ClVideo_GetCaps);
 		KeEnableCallRequest(ClVideo_GetQuantSize);
 		KeEnableNotification(NfKe_TerminateProcess);
+
+		KeSetSymbol(SmVideo_OK);
 
 		CCallRequest<4> CR;
 		CNotification<4> N;

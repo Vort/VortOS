@@ -57,18 +57,17 @@ public:
 		}
 		CreateProcess("PCI.bin");
 
-		CreateProcess("BochsVideo.bin");
-		KeWaitForSymbol(SmVideo_OK, SmVideo_Fail);
-		//if (KeWaitForSymbol(SmVideo_OK, SmVideo_Fail) == SmVideo_Fail)
-		//{
-		//     KeResetSymbol(SmVideo_Fail);
-		//     CreateProcess("CLGD5446Video.bin");
-		//     if (...)
-		//}
-		CreateProcess("CLGD5446Video.bin");
-		CreateProcess("S3Trio64Video.bin");
-		CreateProcess("VMwareVideo.bin");
-		CreateProcess("VGAVideo.bin");
+		char* videoDrvList[] =
+		{
+			"BochsVideo.bin",
+			"CLGD5446Video.bin",
+			"S3Trio64Video.bin",
+			"VMwareVideo.bin",
+			"VGAVideo.bin",
+			null
+		};
+		LoadVideo(videoDrvList);
+
 		CreateProcess("Renderer.bin");
 		CreateProcess("SurfMgr.bin");
 		CreateProcess("Cursor.bin");
@@ -81,6 +80,19 @@ public:
 		KeSetSymbol(Sm_InitStage2);
 
 		CreateProcess("Viewer.bin");
+	}
+
+	void LoadVideo(char* videoDrvList[])
+	{
+		for (int i = 0; ; i++)
+		{
+			if (videoDrvList[i] == null)
+				return;
+			CreateProcess(videoDrvList[i]);
+			if (KeWaitForSymbol(SmVideo_OK, SmVideo_Fail) == SmVideo_OK)
+				return;
+			KeResetSymbol(SmVideo_Fail);
+		}
 	}
 
 	bool CreateProcess(char* fileName)

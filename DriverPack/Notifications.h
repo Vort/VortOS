@@ -27,10 +27,6 @@
 #define NfRenderer_FillSurface 0x4AC4B280
 #define NfRenderer_DrawRect 0xE0F07A75
 
-#define NfVideo_IdentifyResp 0x1AB1CE3E
-#define NfVideo_InfoResp 0xE3D71C81
-#define NfVideo_FlowResp 0xC13CF6A9
-
 #define NfSurfMgr_MoveSurface 0xD339A85A
 #define NfSurfMgr_FillSurface 0x0152595C
 #define NfSurfMgr_DrawRect 0x38C02474

@@ -1,16 +1,18 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // S3Trio64Video.cpp
 #include "API.h"
-#include "GenericVideo.h"
 
 // ----------------------------------------------------------------------------
-class CS3Trio64Video : public CGenericVideo
+class CS3Trio64Video
 {
 public:
 	CS3Trio64Video()
 	{
-		if (!Init(0x1D92CDC8, 1))
+		if (!Detect())
+		{
+			KeSetSymbol(SmVideo_Fail);
 			return;
+		}
 
 		dword Width = 800;
 		dword Height = 600;
@@ -27,6 +29,8 @@ public:
 		KeEnableCallRequest(ClVideo_GetCaps);
 		KeEnableCallRequest(ClVideo_GetQuantSize);
 		KeEnableNotification(NfKe_TerminateProcess);
+
+		KeSetSymbol(SmVideo_OK);
 
 		CCallRequest<4> CR;
 		CNotification<4> N;

@@ -122,7 +122,6 @@
     <ClInclude Include="CursorTexture.h" />
     <ClInclude Include="Defs.h" />
     <ClInclude Include="Font_Arial.h" />
-    <ClInclude Include="GenericVideo.h" />
     <ClInclude Include="KeCalls.h" />
     <ClInclude Include="Notifications.h" />
     <ClInclude Include="NumericConverter.h" />
