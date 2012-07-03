@@ -264,7 +264,10 @@ public:
 			KeWaitFor(1);
 			N.Recv();
 			if (N.GetID() == NfKe_IRQ6)
+			{
+				KeEndOfInterrupt(6);
 				break;
+			}
 		}
 	}
 

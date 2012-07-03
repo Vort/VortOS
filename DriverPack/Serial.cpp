@@ -35,6 +35,7 @@ public:
 			{
 				byte B = KeInPortByte(PortBase);
 				KeNotify(NfCom_Data, &B, 1);
+				KeEndOfInterrupt(4);
 			}
 			else if (N.GetID() == NfKe_TerminateProcess)
 				return;

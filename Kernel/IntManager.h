@@ -12,6 +12,7 @@ public:
 	CIntManager(CPhysMemManager& PMM, dword KernelTaskSelector);
 	dword GetRequestIndex(dword ProcessEIP);
 	void UnmaskIRQ(dword IRQ);
+	void EndOfInterrupt(dword IRQ);
 
 	dword GetHandlersBase();
 	CIDT& GetIDT();

@@ -51,6 +51,7 @@ public:
 					//DebugOut("]", 1);
 
 					OnKeybByte(D);
+					KeEndOfInterrupt(1);
 				}
 				else if (N.GetID() == NfKe_IRQ12)
 				{
@@ -68,6 +69,7 @@ public:
 
 					if (M)
 						OnMouseByte(D);
+					KeEndOfInterrupt(12);
 				}
 				else if (N.GetID() == NfKeyboard_SwitchLEDStatus)
 				{

@@ -93,6 +93,8 @@
     <ClCompile Include="Hello.cpp" />
     <ClCompile Include="i8042.cpp" />
     <ClCompile Include="Init.cpp" />
+    <ClCompile Include="NE2000.cpp" />
+    <ClCompile Include="Network.cpp" />
     <ClCompile Include="OpNewDel.cpp" />
     <ClCompile Include="Partition.cpp" />
     <ClCompile Include="PCI.cpp" />

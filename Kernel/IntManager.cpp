@@ -103,14 +103,7 @@ dword CIntManager::GetRequestIndex(dword ProcessEIP)
 		if (Offset < 32 * 32)
 			IntNum = Offset / 32;
 		else
-		{
 			IntNum = (Offset - 32 * 32) / 8 + 0x20;
-
-			if ((IntNum >= 0x28) && (IntNum < 0x30))
-				_outp(0xA0, 0x20);
-			if ((IntNum >= 0x20) && (IntNum < 0x30))
-				_outp(0x20, 0x20);
-		}
 	}
 	return IntNum;
 }
@@ -130,6 +123,17 @@ void CIntManager::UnmaskIRQ(dword IRQ)
 	{
 		ClearBit(m_PIC1Mask, IndexT);
 		_outp(0x21, m_PIC1Mask);
+	}
+}
+
+// ----------------------------------------------------------------------------
+void CIntManager::EndOfInterrupt(dword IRQ)
+{
+	if (IRQ < 16)
+	{
+		if (IRQ >= 8)
+			_outp(0xA0, 0x20);
+		_outp(0x20, 0x20);
 	}
 }
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

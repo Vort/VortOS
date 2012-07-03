@@ -424,4 +424,10 @@ bool KeResetSymbol(dword Symbol)
 	GenericKeCall(46, 4, 1, PB(&Symbol), &Success);
 	return Success;
 }
+
+// ----------------------------------------------------------------------------
+void KeEndOfInterrupt(dword IRQ)
+{
+	GenericKeCall(47, 4, 0, PB(&IRQ), 0);
+}
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

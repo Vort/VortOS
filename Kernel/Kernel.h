@@ -109,6 +109,7 @@ public:
 	void OnKeGetNextProcessInfo();
 	void OnKeGetBootType();
 	void OnKeResetSymbol();
+	void OnKeEndOfInterrupt();
 
 private:
 	dword m_TickCount;

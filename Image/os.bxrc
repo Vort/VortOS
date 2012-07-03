@@ -6,6 +6,13 @@ cpu: count=1, ips=30000000, reset_on_triple_fault=1
 clock: sync=realtime, time0=local
 vga: extension=vbe, update_freq=15
 
+#info: action=report
+#debug: action=report
+#log: bochsout.txt
+
+pci: enabled=1, chipset=i440fx, slot1=ne2k
+ne2k: mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="NetworkRoot"
+
 #mouse: enabled=0, type=serial
 #com1: enabled=1, mode=mouse
 

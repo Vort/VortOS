@@ -40,6 +40,7 @@
 #define Sm_Lock_Partition 0x86B16F37
 #define Sm_Lock_Floppy    0x073CD70D
 #define Sm_Lock_i8042     0x5FC779E1
+#define Sm_Lock_NE2000    0x16B7AB3C
 #define Sm_Lock_SysInit   0x23A54B79
 #define Sm_Lock_DbgCons   0x39047190
 #define Sm_Lock_Ps2Keyb   0x7761238D

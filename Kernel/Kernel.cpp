@@ -516,7 +516,6 @@ void CKernel::OnKeWaitTicks()
 
 	dword TickCount = (PD(m_KeCallInDataBuf))[0];
 	m_ActiveThread->WaitForTicks(TickCount);
-
 }
 
 // ----------------------------------------------------------------------------
@@ -887,6 +886,16 @@ void CKernel::OnKeResetSymbol()
 }
 
 // ----------------------------------------------------------------------------
+void CKernel::OnKeEndOfInterrupt()
+{
+	if (m_KeCallInDataSize != 4) return;
+	if (m_KeCallOutDataSize != 0) return;
+
+	dword IRQ = ((dword*)m_KeCallInDataBuf)[0];
+	m_IM.EndOfInterrupt(IRQ);
+}
+
+// ----------------------------------------------------------------------------
 void CKernel::OnKeCall(dword FunctionIndex)
 {
 	m_KeCallRealOutDataSize = m_KeCallOutDataSize;
@@ -933,6 +942,7 @@ void CKernel::OnKeCall(dword FunctionIndex)
 	case 44: OnKeGetNextProcessInfo(); break;
 	case 45: OnKeGetBootType(); break;
 	case 46: OnKeResetSymbol(); break;
+	case 47: OnKeEndOfInterrupt(); break;
 	}
 }
 
@@ -1006,6 +1016,7 @@ void CKernel::ProcessHWIntRequest(dword Index)
 			ProcessReboot();
 
 		BroadcastNotification(0, NfKe_IRQ0);
+		m_IM.EndOfInterrupt(0);
 	}
 	else if (Index == 0x21)
 		BroadcastNotification(0, NfKe_IRQ1);
@@ -1013,6 +1024,8 @@ void CKernel::ProcessHWIntRequest(dword Index)
 		BroadcastNotification(0, NfKe_IRQ4);
 	else if (Index == 0x26)
 		BroadcastNotification(0, NfKe_IRQ6);
+	else if (Index == 0x29)
+		BroadcastNotification(0, NfKe_IRQ9);
 	else if (Index == 0x2C)
 		BroadcastNotification(0, NfKe_IRQ12);
 }

@@ -56,6 +56,7 @@ public:
 			return;
 		}
 		CreateProcess("PCI.bin");
+		CreateProcess("NE2000.bin");
 
 		char* videoDrvList[] =
 		{
