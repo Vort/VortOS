@@ -16,6 +16,7 @@
 #define SmDesktop_Ready 0x2C9C9C65
 #define SmFont_Ready 0x1E06B3B1
 #define SmPCI_Ready 0x7CB5C2B7
+#define SmNetwork_Ready 0x40EBF855
 
 #define SmCursor_Terminated 0xF3C55B2E
 #define SmDesktop_Terminated 0x5AAB30D0

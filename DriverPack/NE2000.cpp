@@ -11,6 +11,7 @@ private:
 	word packetBuf[1024];
 	bool sending;
 	dword currReadPage;
+	dword prevReadPage;
 
 public:
 	NE2000()
@@ -20,10 +21,12 @@ public:
 
 		sending = false;
 		currReadPage = 0x48;
+		prevReadPage = 0x60;
 
 		KeUnmaskIRQ(9);
 		KeEnableNotification(NfKe_IRQ9);
 		KeEnableNotification(NfNetwork_SendPacket);
+		KeEnableCallRequest(ClNetwork_GetSelfMACAddress);
 
 		// page = 1, no DMA, start
 		KeOutPortByte(baseAddress + 0x0, 0x62); // CR
@@ -35,11 +38,11 @@ public:
 		KeOutPortByte(baseAddress + 0x1, currReadPage); // PSTART
 		KeOutPortByte(baseAddress + 0x2, 0x60); // PSTOP
 		// last read packet at page 96
-		KeOutPortByte(baseAddress + 0x3, 0x60); // BNRY
+		KeOutPortByte(baseAddress + 0x3, prevReadPage); // BNRY
+		// accept broadcast
+		KeOutPortByte(baseAddress + 0xC, 0x04); // RCR
 		// fifo = 2, no loopback, LE byte order, word DMA
 		KeOutPortByte(baseAddress + 0xE, 0xC9); // DCR
-		// promiscuous mode
-		KeOutPortByte(baseAddress + 0xC, 0x10); // RCR
 		// unmask PTX and PRX
 		KeOutPortByte(baseAddress + 0xF, 0x3); // IMR
 
@@ -58,11 +61,30 @@ public:
 		if (KeInPortWord(baseAddress + 0x10) != 0x5757)
 			return;
 
+		// page = 1, no DMA, start
+		KeOutPortByte(baseAddress + 0x0, 0x62); // CR
+
+		KeOutPortByte(baseAddress + 0x1, macAddr[0]); // PAR0
+		KeOutPortByte(baseAddress + 0x2, macAddr[1]); // PAR1
+		KeOutPortByte(baseAddress + 0x3, macAddr[2]); // PAR2
+		KeOutPortByte(baseAddress + 0x4, macAddr[3]); // PAR3
+		KeOutPortByte(baseAddress + 0x5, macAddr[4]); // PAR4
+		KeOutPortByte(baseAddress + 0x6, macAddr[5]); // PAR5
+
+		// page = 0, no DMA, start
+		KeOutPortByte(baseAddress + 0x0, 0x22); // CR
+
+		KeSetSymbol(SmNetwork_Ready);
+
+
+		CCallRequest<4> CR;
 		CNotification<2048> N;
 		for (;;)
 		{
-			KeWaitFor(1);
-			dword NfCount = KeGetNotificationCount();
+			KeWaitFor(3);
+			dword NfCount;
+			dword CallCount;
+			KeGetNfClCount(NfCount, CallCount);
 
 			for (dword z = 0; z < NfCount; z++)
 			{
@@ -75,6 +97,14 @@ public:
 				{
 					if (!sending)
 						SendPacket(N.GetBuf(), N.GetSize());
+				}
+			}
+			for (dword z = 0; z < CallCount; z++)
+			{
+				CR.Recv();
+				if (CR.GetTypeID() == ClNetwork_GetSelfMACAddress)
+				{
+					CR.Respond(macAddr, 6);
 				}
 			}
 		}
@@ -91,15 +121,18 @@ public:
 			KeOutPortByte(baseAddress + 0xB, 0x00); // RBCR1
 			KeOutPortByte(baseAddress + 0x0, 0x0A); // CR
 
+			prevReadPage = currReadPage;
 			currReadPage = KeInPortWord(baseAddress + 0x10) >> 8;
 			word packetSize = KeInPortWord(baseAddress + 0x10) - 4;
 
-			KeOutPortByte(baseAddress + 0xA, packetSize & 0xFF); // RBCR0
-			KeOutPortByte(baseAddress + 0xB, packetSize >> 8); // RBCR1
-
 			dword wordCount = (packetSize + 1) / 2;
+			KeOutPortByte(baseAddress + 0xA, (wordCount * 2) & 0xFF); // RBCR0
+			KeOutPortByte(baseAddress + 0xB, (wordCount * 2) >> 8); // RBCR1
+
 			for (int i = 0; i < wordCount; i++)
 				packetBuf[i] = KeInPortWord(baseAddress + 0x10);
+
+			KeOutPortByte(baseAddress + 0x3, prevReadPage); // BNRY
 
 			KeNotify(NfNetwork_RecvdPacket, (byte*)packetBuf, packetSize);
 

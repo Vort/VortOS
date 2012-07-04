@@ -33,6 +33,8 @@
 #define ClPCI_GetDeviceCount 0x693E5154
 #define ClPCI_GetDeviceInfoByIndex 0x54323DBF
 
+#define ClNetwork_GetSelfMACAddress 0xC6B234D1
+
 #define ClFont_FitText 0xB168AC62
 #define ClFont_GetTextWidth 0x41041051
 
