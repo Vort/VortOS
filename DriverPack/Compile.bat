@@ -50,9 +50,9 @@ link.exe %linkparams% -out:CLGD5446Video.bi_ CLGD5446Video.obj
 ..\DriverStripper.exe PS2Mouse.bi_ "|1|" "(0)"
 ..\DriverStripper.exe SerialMouse.bi_ "|1|" "(0)"
 
+..\DriverStripper.exe NE2000.bi_ "|2|" "(0)"
 ..\DriverStripper.exe Cursor.bi_ "|2|" "(1)"
 
-..\DriverStripper.exe NE2000.bi_ "|3|" "(0)"
 ..\DriverStripper.exe Network.bi_ "|3|" "(0)"
 ..\DriverStripper.exe DMA.bi_ "|3|" "(0)"
 ..\DriverStripper.exe Floppy.bi_ "|3|" "(0)"

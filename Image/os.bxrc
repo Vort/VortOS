@@ -12,6 +12,7 @@ vga: extension=vbe, update_freq=15
 
 pci: enabled=1, chipset=i440fx, slot1=ne2k
 ne2k: mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=\Device\NPF_{7F94E65F-10A6-4775-B1FD-DCE9E61981CF}
+#ne2k: mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=\Device\NPF_{AC8720E7-A005-4FC6-98BD-A29B2697C194}
 #ne2k: mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="NetworkRoot"
 
 #mouse: enabled=0, type=serial

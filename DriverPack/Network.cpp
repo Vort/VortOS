@@ -23,10 +23,18 @@ public:
 
 		memset(broadcastMAC, 0xFF, 6);
 
+		/*
 		selfIP[0] = 178;
 		selfIP[1] = 150;
 		selfIP[2] = 133;
 		selfIP[3] = 127;
+		*/
+		
+		selfIP[0] = 192;
+		selfIP[1] = 168;
+		selfIP[2] = 136;
+		selfIP[3] = 3;
+		
 
 		KeRequestCall(ClNetwork_GetSelfMACAddress, null, 0, selfMAC, 6);
 
@@ -110,6 +118,8 @@ public:
 		if (len < 0x000E)
 			return;
 
+		DebugOut("p", 1);
+
 		// Ethernet
 		byte dstMAC[6];
 		byte srcMAC[6];
@@ -160,7 +170,8 @@ public:
 				if (!IsMacEqual(srcMAC, senderMAC))
 					return;
 				if (!IsMacEqual(dstMAC, broadcastMAC))
-					return;
+					if (!IsMacEqual(dstMAC, selfMAC))
+						return;
 				
 				if (IsIpEqual(targetIP, selfIP))
 				{
