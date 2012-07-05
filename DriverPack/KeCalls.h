@@ -430,4 +430,10 @@ void KeEndOfInterrupt(dword IRQ)
 {
 	GenericKeCall(47, 4, 0, PB(&IRQ), 0);
 }
+
+// ----------------------------------------------------------------------------
+void KeSetGeneralProtectionExceptionHandler(void* Address)
+{
+	GenericKeCall(48, 4, 0, PB(&Address), 0);
+}
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

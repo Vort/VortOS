@@ -110,6 +110,7 @@ public:
 	void OnKeGetBootType();
 	void OnKeResetSymbol();
 	void OnKeEndOfInterrupt();
+	void OnKeSetGeneralProtectionExceptionHandler();
 
 private:
 	dword m_TickCount;

@@ -896,6 +896,16 @@ void CKernel::OnKeEndOfInterrupt()
 }
 
 // ----------------------------------------------------------------------------
+void CKernel::OnKeSetGeneralProtectionExceptionHandler()
+{
+	if (m_KeCallInDataSize != 4) return;
+	if (m_KeCallOutDataSize != 0) return;
+
+	dword Address = ((dword*)m_KeCallInDataBuf)[0];
+	m_ActiveThread->SetGPEHandler(Address);
+}
+
+// ----------------------------------------------------------------------------
 void CKernel::OnKeCall(dword FunctionIndex)
 {
 	m_KeCallRealOutDataSize = m_KeCallOutDataSize;
@@ -943,6 +953,7 @@ void CKernel::OnKeCall(dword FunctionIndex)
 	case 45: OnKeGetBootType(); break;
 	case 46: OnKeResetSymbol(); break;
 	case 47: OnKeEndOfInterrupt(); break;
+	case 48: OnKeSetGeneralProtectionExceptionHandler(); break;
 	}
 }
 
@@ -994,16 +1005,28 @@ void CKernel::ProcessHWIntRequest(dword Index)
 		}
 		else
 		{
-			(PD(m_TempBuf))[0] = T->GetID();
-			(PD(m_TempBuf))[1] = Index;
-			(PD(m_TempBuf))[2] = *PD(&T->GetRing0Stack()[0xFEC]);
+			bool fail = true;
+			if ((Index == 0xD) && (T->GetGPEHandler() != 0))
+				fail = false;
+			if (fail)
+			{
+				(PD(m_TempBuf))[0] = T->GetID();
+				(PD(m_TempBuf))[1] = Index;
+				(PD(m_TempBuf))[2] = *PD(&T->GetRing0Stack()[0xFEC]);
 
-			const CFString<128>& Name = T->GetName();
-			Name.CopyTo((char*)(m_TempBuf + 12));
+				const CFString<128>& Name = T->GetName();
+				Name.CopyTo((char*)(m_TempBuf + 12));
 
-			BroadcastNotification(0, NfKe_ExceptionInfo,
-				12 + Name.Len(), CUniPtr(m_TempBuf));
-			RemoveActiveThread();
+				BroadcastNotification(0, NfKe_ExceptionInfo,
+					12 + Name.Len(), CUniPtr(m_TempBuf));
+				RemoveActiveThread();
+			}
+			else
+			{
+				T->ResetStack();
+				T->GetTask().GetTSS().GetTaskState().EIP = T->GetGPEHandler();
+				T->SetGPEHandler(0);
+			}
 		}
 	}
 	else if (Index == 0x20)

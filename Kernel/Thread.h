@@ -93,6 +93,10 @@ public:
 	byte GetPriority();
 	byte GetAccessLevel();
 
+	dword GetGPEHandler();
+	void SetGPEHandler(dword Address);
+	void ResetStack();
+
 	void* MemAlloc(dword ByteCount);
 	void MemFree(void* Base);
 
@@ -164,6 +168,9 @@ private:
 	byte m_FPUState[108];
 
 	byte* m_Ring0Stack;
+	byte* m_Ring3Stack;
+
+	dword m_GPEHandler;
 
 	static const dword c_ImageBase        = 0x00400000;
 	static const dword c_StackVBase       = 0x00700000;

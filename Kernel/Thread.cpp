@@ -13,6 +13,7 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 {
 	m_IsFPUInitialized = false;
 	m_IsFPUStateChanged = false;
+	m_GPEHandler = 0;
 
 	m_SwitchesCount = 0;
 
@@ -41,7 +42,7 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 	dword DataPageCount = (DataSize + 4095) / 4096;
 
 	m_Ring0Stack = (byte*)AllocBlock(1);
-	byte* Stack = (byte*)AllocBlock(c_StackPageCount);
+	m_Ring3Stack = (byte*)AllocBlock(c_StackPageCount);
 	byte* Code = (byte*)AllocBlock(CodePageCount);
 	byte* RData = (byte*)AllocBlock(RDataPageCount);
 	byte* Data = (byte*)AllocBlock(DataPageCount);
@@ -58,7 +59,7 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 	m_VMM->MapPhysBlockToVirtBlock((dword)Code, CodeVBase, CodePageCount, false);
 	m_VMM->MapPhysBlockToVirtBlock((dword)RData, RDataVBase, RDataPageCount, false);
 	m_VMM->MapPhysBlockToVirtBlock((dword)Data, DataVBase, DataPageCount);
-	m_VMM->MapPhysBlockToVirtBlock((dword)Stack, c_StackVBase, c_StackPageCount);
+	m_VMM->MapPhysBlockToVirtBlock((dword)m_Ring3Stack, c_StackVBase, c_StackPageCount);
 
 	m_VMM->MapPhysPageToVirtPage((dword)m_Ring0Stack, c_R0StackVBase);
 	m_VMM->MapPhysPageToVirtPage((dword)ServiceFuncPage, c_ServiceFuncVBase, false);
@@ -69,7 +70,7 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 	Image.CopyUtoP(CodeImageBase, CodeSize, Code);
 	Image.CopyUtoP(RDataImageBase, RDataSize, RData);
 	Image.CopyUtoP(DataImageBase, DataSize, Data);
-	*(dword*)(Stack + c_StackPageCount * 4096 - 4) = c_ServiceFuncVBase;
+	*(dword*)(m_Ring3Stack + c_StackPageCount * 4096 - 4) = c_ServiceFuncVBase;
 
 	// Create Task
 	m_Task = new CTask(
@@ -224,6 +225,25 @@ byte CThread::GetPriority()
 byte CThread::GetAccessLevel()
 {
 	return m_AccessLevel;
+}
+
+// ----------------------------------------------------------------------------
+dword CThread::GetGPEHandler()
+{
+	return m_GPEHandler;
+}
+
+// ----------------------------------------------------------------------------
+void CThread::SetGPEHandler(dword Address)
+{
+	m_GPEHandler = Address;
+}
+
+// ----------------------------------------------------------------------------
+void CThread::ResetStack()
+{
+	*(dword*)(m_Ring3Stack + c_StackPageCount * 4096 - 4) = c_ServiceFuncVBase;
+	m_Task->GetTSS().GetTaskState().ESP = c_StackVBase + c_StackPageCount * 4096 - 4;
 }
 
 // ----------------------------------------------------------------------------
