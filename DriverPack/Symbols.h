@@ -25,6 +25,9 @@
 #define SmVideo_OK 0x25030598
 #define SmVideo_Fail 0x52A323ED
 
+#define SmVMWareMouse_DetectOK 0x2C5A012C
+#define SmVMWareMouse_DetectFail 0x3D8738E9
+
 #define Sm_InitStage0 0x3208F6AA // All Drivers Loaded
 //#define Sm_InitStage1 0x7407D39F // Video Subsystem Ready
 #define Sm_InitStage2 0x32FDDA6E // User Soft Allowed To Run

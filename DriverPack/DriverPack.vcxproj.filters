@@ -138,6 +138,9 @@
     <ClCompile Include="NE2000.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VMwareMouse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="API.h">

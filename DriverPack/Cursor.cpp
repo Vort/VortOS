@@ -4,6 +4,9 @@
 #include "CursorTexture.h"
 
 // ----------------------------------------------------------------------------
+extern "C" int _fltused = 0;
+
+// ----------------------------------------------------------------------------
 class CCursor
 {
 public:
@@ -30,21 +33,22 @@ public:
 		m_CursorY = m_MaxCursorY / 2;
 
 		KeWaitForSymbol(SmSurfMgr_Ready);
-		dword SurfaceID = CreateSurface(m_CursorX, m_CursorY, 11, 18, 2);
+		m_SurfaceID = CreateSurface(m_CursorX, m_CursorY, 11, 18, 2);
 
 		dword SMID = KeAllocSharedMem(11*18*4);
 		byte* SMTexData = KeMapSharedMem(SMID);
 		for (dword i = 0; i < 11*18*4; i++)
 			SMTexData[i] = CursorTexture[i];
-		SetSurfaceData(SurfaceID, SMID, 11*18*4);
+		SetSurfaceData(m_SurfaceID, SMID, 11*18*4);
 		KeReleaseSharedMem(SMID);
 
-		ShowSurface(SurfaceID);
+		ShowSurface(m_SurfaceID);
 		WaitRedraw();
 		KeSetSymbol(SmCursor_Ready);
 		KeWaitForSymbol(SmDesktop_Ready);
 
 		KeEnableNotification(Nf_MouseDeltaMove);
+		KeEnableNotification(Nf_MouseAbsMove);
 		KeEnableNotification(Nf_MouseButtonDown);
 		KeEnableNotification(Nf_MouseButtonUp);
 		KeEnableNotification(NfKe_TerminateProcess);
@@ -62,20 +66,18 @@ public:
 
 				m_CursorX += DeltaX;
 				m_CursorY += DeltaY;
-				if (m_CursorX < 0)
-					m_CursorX = 0;
-				if (m_CursorY < 0)
-					m_CursorY = 0;
-				if (m_CursorX > m_MaxCursorX)
-					m_CursorX = m_MaxCursorX;
-				if (m_CursorY > m_MaxCursorY)
-					m_CursorY = m_MaxCursorY;
 
-				byte NfBuf[8];
-				*PD(&NfBuf[0]) = m_CursorX;
-				*PD(&NfBuf[4]) = m_CursorY;
-				KeNotify(Nf_CursorMoveTo, NfBuf, 8);
-				MoveSurface(SurfaceID, m_CursorX, m_CursorY);
+				ProcessMovement();
+			}
+			if (N.GetID() == Nf_MouseAbsMove)
+			{
+				float x = *(float*)(N.GetBuf() + 0);
+				float y = *(float*)(N.GetBuf() + 4);
+
+				m_CursorX = (dword)(x * m_MaxCursorX);
+				m_CursorY = (dword)(y * m_MaxCursorY);
+
+				ProcessMovement();
 			}
 			else if (N.GetID() == Nf_MouseButtonDown)
 			{
@@ -99,6 +101,24 @@ public:
 				return;
 			}
 		}
+	}
+
+	void ProcessMovement()
+	{
+		if (m_CursorX < 0)
+			m_CursorX = 0;
+		if (m_CursorY < 0)
+			m_CursorY = 0;
+		if (m_CursorX > m_MaxCursorX)
+			m_CursorX = m_MaxCursorX;
+		if (m_CursorY > m_MaxCursorY)
+			m_CursorY = m_MaxCursorY;
+
+		byte NfBuf[8];
+		*PD(&NfBuf[0]) = m_CursorX;
+		*PD(&NfBuf[4]) = m_CursorY;
+		KeNotify(Nf_CursorMoveTo, NfBuf, 8);
+		MoveSurface(m_SurfaceID, m_CursorX, m_CursorY);
 	}
 
 	void OnClick()
@@ -140,6 +160,8 @@ public:
 
 	int m_MouseDownX;
 	int m_MouseDownY;
+
+	dword m_SurfaceID;
 };
 
 // ----------------------------------------------------------------------------

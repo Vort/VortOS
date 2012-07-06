@@ -8,8 +8,8 @@ class CPS2Mouse
 public:
 	CPS2Mouse()
 	{
-		m_IsLMBPressed = false;
-		m_IsRMBPressed = false;
+		buttonPressed[0] = false;
+		buttonPressed[1] = false;
 
 		m_Flags = 0;
 		m_DeltaX = 0;
@@ -53,36 +53,36 @@ public:
 					DeltaX |= TestBit(m_Flags, 4) * 0xFFFFFF00;
 					DeltaY |= TestBit(m_Flags, 5) * 0xFFFFFF00;
 					DeltaY = -DeltaY;
-					bool LMB = TestBit(m_Flags, 0);
-					bool RMB = TestBit(m_Flags, 1);
 
-					byte NfData[8];
-					*PD(&NfData[0]) = DeltaX;
-					*PD(&NfData[4]) = DeltaY;
-
-					KeNotify(Nf_MouseDeltaMove, NfData, 8);
-					if (LMB != m_IsLMBPressed)
+					bool buttonPressedNew[2] =
 					{
-						NfData[0] = 0;
-						if (m_IsLMBPressed == false)
-							KeNotify(Nf_MouseButtonDown, NfData, 1);
-						else
-							KeNotify(Nf_MouseButtonUp, NfData, 1);
-						m_IsLMBPressed = LMB;
+						TestBit(m_Flags, 0),
+						TestBit(m_Flags, 1)
+					};
+
+					if ((DeltaX != 0) || (DeltaY != 0))
+					{
+						int moveData[2] = {DeltaX, DeltaY};
+						KeNotify(Nf_MouseDeltaMove, (byte*)moveData, 8);
 					}
-					if (RMB != m_IsRMBPressed)
+
+					for (int i = 0; i < 2; i++)
 					{
-						NfData[0] = 1;
-						if (m_IsRMBPressed == false)
-							KeNotify(Nf_MouseButtonDown, NfData, 1);
-						else
-							KeNotify(Nf_MouseButtonUp, NfData, 1);
-						m_IsRMBPressed = RMB;
+						if (buttonPressed[i] != buttonPressedNew[i])
+						{
+							if (buttonPressedNew[i])
+								KeNotify(Nf_MouseButtonDown, (byte*)(&i), 1);
+							else
+								KeNotify(Nf_MouseButtonUp, (byte*)(&i), 1);
+							buttonPressed[i] = buttonPressedNew[i];
+						}
 					}
 				}
 			}
 			else if (N.GetID() == NfKe_TerminateProcess)
+			{
 				return;
+			}
 		}
 	}
 
@@ -91,8 +91,8 @@ private:
 	byte m_Flags;
 	byte m_DeltaX;
 	byte m_DeltaY;
-	bool m_IsLMBPressed;
-	bool m_IsRMBPressed;
+
+	bool buttonPressed[2];
 };
 
 // ----------------------------------------------------------------------------

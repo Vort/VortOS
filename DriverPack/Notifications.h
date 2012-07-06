@@ -41,6 +41,7 @@
 #define Nf_StorageDeviceDetected 0x64704FF4
 #define Nf_StorageDeviceCached 0xCC000302
 #define Nf_MouseDeltaMove 0x2A9FA8AC
+#define Nf_MouseAbsMove 0x1082C471
 #define Nf_MouseButtonDown 0x30B48F80
 #define Nf_MouseButtonUp 0x2B148460
 

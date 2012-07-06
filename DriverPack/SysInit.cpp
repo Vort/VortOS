@@ -29,15 +29,25 @@ public:
 		KeSetSymbol(Sm_InitStage0);
 	}
 
+	void LoadKeybAndMouse()
+	{
+		CreateProcess("i8042.bin");
+		CreateProcess("Serial.bin");
+		CreateProcess("PS2Keyb.bin");
+		CreateProcess("VMwareMouse.bin");
+		if (KeWaitForSymbol(SmVMWareMouse_DetectOK,
+			SmVMWareMouse_DetectFail) == SmVMWareMouse_DetectFail)
+		{
+			CreateProcess("PS2Mouse.bin");
+		}
+		CreateProcess("SerialMouse.bin");
+	}
+
 	void LoadProcesses()
 	{
 		if (bootType == '  dc')
 		{
-			CreateProcess("i8042.bin");
-			CreateProcess("Serial.bin");
-			CreateProcess("PS2Keyb.bin");
-			CreateProcess("PS2Mouse.bin");
-			CreateProcess("SerialMouse.bin");
+			LoadKeybAndMouse();
 			CreateProcess("Partition.bin");
 			CreateProcess("FAT.bin");
 		}
@@ -45,11 +55,7 @@ public:
 		{
 			CreateProcess("Partition.bin");
 			//CreateProcess("ATA.bin");
-			CreateProcess("i8042.bin");
-			CreateProcess("Serial.bin");
-			CreateProcess("PS2Keyb.bin");
-			CreateProcess("PS2Mouse.bin");
-			CreateProcess("SerialMouse.bin");
+			LoadKeybAndMouse();
 		}
 		else
 		{

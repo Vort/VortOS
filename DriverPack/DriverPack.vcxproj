@@ -114,6 +114,7 @@
     <ClCompile Include="Test.cpp" />
     <ClCompile Include="VGAVideo.cpp" />
     <ClCompile Include="Viewer.cpp" />
+    <ClCompile Include="VMwareMouse.cpp" />
     <ClCompile Include="VMwareVideo.cpp" />
   </ItemGroup>
   <ItemGroup>
