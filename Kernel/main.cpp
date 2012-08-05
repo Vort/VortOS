@@ -163,7 +163,7 @@ void Entry()
 	GDT.CreateNewDescriptor(0, 0xFFFFF, 0xF2, 1);
 	GDT.CreateNewDescriptor(0, 0xFFFFF, 0xF8, 1);
 
-	static const dword HeapPageCount = 24;
+	static const dword HeapPageCount = 32;
 	void* HeapBlock = PMM.AllocBlock(HeapPageCount);
 	CHeap SysHeap(PB(HeapBlock), HeapPageCount * 4096);
 	g_SysHeap = &SysHeap;

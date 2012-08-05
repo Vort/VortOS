@@ -69,6 +69,7 @@ public:
 			"BochsVideo.bin",
 			"CLGD5446Video.bin",
 			"S3Trio64Video.bin",
+			"GeForce3Ti500Video.bin",
 			"VMwareVideo.bin",
 			"VGAVideo.bin",
 			null

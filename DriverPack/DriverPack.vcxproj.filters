@@ -141,6 +141,12 @@
     <ClCompile Include="VMwareMouse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="KeApiTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeForce3Ti500Video.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="API.h">

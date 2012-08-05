@@ -3,12 +3,13 @@ del %outdir%\* /Q
 
 set linkparams=-nologo -nod -fixed -opt:ref -entry:Entry -subsystem:windows ..\my_memcpy.obj ..\my_memset.obj OpNewDel.obj String2.obj
 
-cl.exe -c -GR- -GS- -Gs999999999 -Gy -Ox -Oy -O2 -Oi- -fp:fast -Fo"%outdir%\\" Hello.cpp Test.cpp i8042.cpp PS2Keyb.cpp PS2Mouse.cpp Floppy.cpp DMA.cpp FileSys.cpp Viewer.cpp OpNewDel.cpp String2.cpp Cursor.cpp Font.cpp ProcInfo.cpp Desktop.cpp PCI.cpp Renderer.cpp SurfMgr.cpp DebugConsole.cpp Serial.cpp SerialMouse.cpp BochsVideo.cpp VMwareVideo.cpp VGAVideo.cpp PCIList.cpp ATA.cpp CLGD5446Video.cpp FAT.cpp Cache.cpp Partition.cpp Reboot.cpp SAnim.cpp FillBenchmark.cpp CDFS.cpp S3Trio64Video.cpp Benchmark.cpp SysInit.cpp Network.cpp NE2000.cpp VMwareMouse.cpp
+cl.exe -c -GR- -GS- -Gs999999999 -Gy -Ox -Oy -O2 -Oi- -fp:fast -Fo"%outdir%\\" Hello.cpp Test.cpp i8042.cpp PS2Keyb.cpp PS2Mouse.cpp Floppy.cpp DMA.cpp FileSys.cpp Viewer.cpp OpNewDel.cpp String2.cpp Cursor.cpp Font.cpp ProcInfo.cpp Desktop.cpp PCI.cpp Renderer.cpp SurfMgr.cpp DebugConsole.cpp Serial.cpp SerialMouse.cpp BochsVideo.cpp VMwareVideo.cpp VGAVideo.cpp PCIList.cpp ATA.cpp CLGD5446Video.cpp FAT.cpp Cache.cpp Partition.cpp Reboot.cpp SAnim.cpp FillBenchmark.cpp CDFS.cpp S3Trio64Video.cpp Benchmark.cpp SysInit.cpp Network.cpp NE2000.cpp VMwareMouse.cpp KeApiTest.cpp GeForce3Ti500Video.cpp
 cd %outdir%
 link.exe %linkparams% -out:VMwareMouse.bi_ VMwareMouse.obj
 link.exe %linkparams% -out:NE2000.bi_ NE2000.obj
 link.exe %linkparams% -out:Network.bi_ Network.obj
 link.exe %linkparams% -out:S3Trio64Video.bi_ S3Trio64Video.obj
+link.exe %linkparams% -out:GeForce3Ti500Video.bi_ GeForce3Ti500Video.obj
 link.exe %linkparams% -out:CDFS.bi_ CDFS.obj
 link.exe %linkparams% -out:FillBenchmark.bi_ FillBenchmark.obj
 link.exe %linkparams% -out:Benchmark.bi_ Benchmark.obj
@@ -21,6 +22,7 @@ link.exe %linkparams% -out:Cursor.bi_ Cursor.obj
 link.exe %linkparams% -out:Viewer.bi_ Viewer.obj
 link.exe %linkparams% -out:Hello.bi_ Hello.obj
 link.exe %linkparams% -out:SysInit.bi_ SysInit.obj
+link.exe %linkparams% -out:KeApiTest.bi_ KeApiTest.obj
 link.exe %linkparams% -out:Test.bi_ Test.obj
 link.exe %linkparams% -out:i8042.bi_ i8042.obj
 link.exe %linkparams% -out:PS2Mouse.bi_ PS2Mouse.obj
@@ -80,6 +82,7 @@ link.exe %linkparams% -out:CLGD5446Video.bi_ CLGD5446Video.obj
 
 ..\DriverStripper.exe Font.bi_ "|7|" "(0)"
 ..\DriverStripper.exe Desktop.bi_ "|7|" "(1)"
+..\DriverStripper.exe GeForce3Ti500Video.bi_ "|8|" "(0)"
 ..\DriverStripper.exe S3Trio64Video.bi_ "|8|" "(0)"
 ..\DriverStripper.exe BochsVideo.bi_ "|8|" "(0)"
 ..\DriverStripper.exe CLGD5446Video.bi_ "|8|" "(0)"
@@ -88,6 +91,7 @@ link.exe %linkparams% -out:CLGD5446Video.bi_ CLGD5446Video.obj
 ..\DriverStripper.exe SurfMgr.bi_ "|8|" "(1)"
 ..\DriverStripper.exe Renderer.bi_ "|9|" "(0)"
 
+..\DriverStripper.exe KeApiTest.bi_ "|10|" "(2)"
 ..\DriverStripper.exe Test.bi_ "|10|" "(2)"
 
 copy *.bin ..\..\Image\FloppyRoot\
