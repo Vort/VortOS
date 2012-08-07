@@ -176,8 +176,8 @@ private:
 	static const dword c_StackVBase       = 0x00700000;
 	static const dword c_UserHeapVBase    = 0x00800000;
 	static const dword c_VMMFreeVBase     = 0x00A00000;
-	static const dword c_R0StackVBase     = 0xFFFE0000;
-	static const dword c_ServiceFuncVBase = 0xFFFF0000;
+	static const dword c_R0StackVBase     = 0xFFFFE000;
+	static const dword c_ServiceFuncVBase = 0xFFFFF000;
 
 	static const dword c_StackPageCount = 4;
 

@@ -16,8 +16,7 @@ CIDT::CIDT(CPhysMemManager& PMM)
 
 	byte IDTPseudoDescriptor[6];
 	*PW(&IDTPseudoDescriptor[0]) = 0x07FF;
-	*PD(&IDTPseudoDescriptor[2]) = dword(m_Gates);
-//	qword IDTPseudoDescriptor = (dword(m_Gates) << 16) | 0x07FF;
+	*PD(&IDTPseudoDescriptor[2]) = c_IdtVBase;
 	__lidt(&IDTPseudoDescriptor);
 }
 

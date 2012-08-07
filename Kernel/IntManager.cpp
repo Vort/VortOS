@@ -44,7 +44,7 @@ CIntManager::CIntManager(CPhysMemManager& PMM, dword KernelTaskSelector)
 			m_IntHandlers[23 + i * 32] = 0xCF;
 		}
 		m_IDT.CreateNewGateAt(i,
-			dword(m_IntHandlers + i * 32), 0x10, 0xEE);
+			dword(c_IntHandlersVBase + i * 32), 0x10, 0xEE);
 	}
 
 	for (dword i = 0; i < 224; i++)
@@ -59,7 +59,7 @@ CIntManager::CIntManager(CPhysMemManager& PMM, dword KernelTaskSelector)
 		m_IntHandlers[0x400 + 7 + i * 8] = 0xCF;
 
 		m_IDT.CreateNewGateAt(i + 32,
-			dword(m_IntHandlers + 0x400 + i * 8), 0x10, 0xEE);
+			dword(c_IntHandlersVBase + 0x400 + i * 8), 0x10, 0xEE);
 	}
 
 	// Relocate Base Interrupt Number - PIC1
@@ -97,7 +97,7 @@ dword CIntManager::GetHandlersBase()
 dword CIntManager::GetRequestIndex(dword ProcessEIP)
 {
 	dword IntNum = -1;
-	dword Offset = ProcessEIP - dword(m_IntHandlers);
+	dword Offset = ProcessEIP - c_IntHandlersVBase;
 	if (Offset < 32 * 32 + 224 * 8)
 	{
 		if (Offset < 32 * 32)

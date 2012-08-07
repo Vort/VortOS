@@ -1,6 +1,8 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Thread.cpp
 #include "Thread.h"
+#include "IDT.h"
+#include "IntManager.h"
 
 // ----------------------------------------------------------------------------
 CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
@@ -49,8 +51,8 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 
 	dword GDTBase = GDT.GetBase();
 	m_VMM->MapPhysPageToVirtPage(GDTBase, GDTBase);
-	m_VMM->MapPhysPageToVirtPage(IDTBase, IDTBase);
-	m_VMM->MapPhysPageToVirtPage(IntHandleBase, IntHandleBase);
+	m_VMM->MapPhysPageToVirtPage(IDTBase, CIDT::c_IdtVBase);
+	m_VMM->MapPhysPageToVirtPage(IntHandleBase, CIntManager::c_IntHandlersVBase);
 
 	dword CodeVBase = c_ImageBase + 0x1000;
 	dword RDataVBase = CodeVBase + CodePageCount * 0x1000;
@@ -84,7 +86,7 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 	dword TSPart1 = dword(&m_Task->GetTSS().GetTaskState()) & ~0xFFF;
 	dword TSPart2 = TSPart1 + 0x1000;
 	m_VMM->MapPhysPageToVirtPage(TSPart1, TSPart1);
-	if ((TSPart2 != IntHandleBase) && (TSPart2 != IDTBase) && (TSPart2 != GDTBase))
+	if (TSPart2 != GDTBase)
 		m_VMM->MapPhysPageToVirtPage(TSPart2, TSPart2);
 
 	dword TSPart3 = KernelTaskStateBase & ~0xFFF;
