@@ -26,7 +26,7 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 		m_KernelPerfData[i] = 0;
 	}
 
-	m_VMM = new CVirtMemManager(PMM, c_VMMFreeVBase);
+	m_VMM = new CVirtMemManager(PMM, c_VMMAllocMinVBase, c_VMMAllocMaxVBase);
 
 	static dword g_ID = 0;
 	g_ID++;
@@ -50,21 +50,21 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 	byte* Data = (byte*)AllocBlock(DataPageCount);
 
 	dword GDTBase = GDT.GetBase();
-	m_VMM->MapPhysPageToVirtPage(GDTBase, GDTBase);
-	m_VMM->MapPhysPageToVirtPage(IDTBase, CIDT::c_IdtVBase);
-	m_VMM->MapPhysPageToVirtPage(IntHandleBase, CIntManager::c_IntHandlersVBase);
+	m_VMM->MapPageAt(GDTBase, GDTBase, true);
+	m_VMM->MapPageAt(IDTBase, CIDT::c_IdtVBase, false);
+	m_VMM->MapPageAt(IntHandleBase, CIntManager::c_IntHandlersVBase, false);
 
 	dword CodeVBase = c_ImageBase + 0x1000;
 	dword RDataVBase = CodeVBase + CodePageCount * 0x1000;
 	dword DataVBase = RDataVBase + RDataPageCount * 0x1000;
 
-	m_VMM->MapPhysBlockToVirtBlock((dword)Code, CodeVBase, CodePageCount, false);
-	m_VMM->MapPhysBlockToVirtBlock((dword)RData, RDataVBase, RDataPageCount, false);
-	m_VMM->MapPhysBlockToVirtBlock((dword)Data, DataVBase, DataPageCount);
-	m_VMM->MapPhysBlockToVirtBlock((dword)m_Ring3Stack, c_StackVBase, c_StackPageCount);
+	m_VMM->MapBlockAt((dword)Code, CodeVBase, CodePageCount, false);
+	m_VMM->MapBlockAt((dword)RData, RDataVBase, RDataPageCount, false);
+	m_VMM->MapBlockAt((dword)Data, DataVBase, DataPageCount, true);
+	m_VMM->MapBlockAt((dword)m_Ring3Stack, c_StackVBase, c_StackPageCount, true);
 
-	m_VMM->MapPhysPageToVirtPage((dword)m_Ring0Stack, c_R0StackVBase);
-	m_VMM->MapPhysPageToVirtPage((dword)ServiceFuncPage, c_ServiceFuncVBase, false);
+	m_VMM->MapPageAt((dword)m_Ring0Stack, c_R0StackVBase, true);
+	m_VMM->MapPageAt((dword)ServiceFuncPage, c_ServiceFuncVBase, false);
 
 	dword CodeImageBase = sizeof(CProcHeader);
 	dword RDataImageBase = CodeImageBase + CodeSize;
@@ -85,16 +85,16 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 
 	dword TSPart1 = dword(&m_Task->GetTSS().GetTaskState()) & ~0xFFF;
 	dword TSPart2 = TSPart1 + 0x1000;
-	m_VMM->MapPhysPageToVirtPage(TSPart1, TSPart1);
+	m_VMM->MapPageAt(TSPart1, TSPart1, true);
 	if (TSPart2 != GDTBase)
-		m_VMM->MapPhysPageToVirtPage(TSPart2, TSPart2);
+		m_VMM->MapPageAt(TSPart2, TSPart2, true);
 
 	dword TSPart3 = KernelTaskStateBase & ~0xFFF;
 	dword TSPart4 = TSPart3 + 0x1000;
 	if ((TSPart3 != TSPart1) && (TSPart3 != TSPart2))
-		m_VMM->MapPhysPageToVirtPage(TSPart3, TSPart3);
+		m_VMM->MapPageAt(TSPart3, TSPart3, true);
 	if ((TSPart4 != TSPart1) && (TSPart4 != TSPart2))
-		m_VMM->MapPhysPageToVirtPage(TSPart4, TSPart4);
+		m_VMM->MapPageAt(TSPart4, TSPart4, true);
 
 	m_Task->SetInterrupts(true);
 }

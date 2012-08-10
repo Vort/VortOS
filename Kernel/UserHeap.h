@@ -31,9 +31,8 @@ public:
 	{
 		if (m_DataBlocks[i] == null)
 		{
-			m_DataBlocks[i] = PB(m_PMM.AllocPage());
-			m_VMM.MapPhysPageToVirtPage(dword(m_DataBlocks[i]),
-				m_VirtualBase + 0x1000 * i);
+			m_DataBlocks[i] = (byte*)(m_PMM.AllocPage());
+			m_VMM.MapPageAt(dword(m_DataBlocks[i]), m_VirtualBase + 0x1000 * i, true);
 		}
 	}
 
@@ -101,7 +100,7 @@ private:
 			if (m_FreeMap[FreeMapOffset + i] == false)
 			{
 				TouchBlock(BlockIndex);
-				Chunk = PB(m_VirtualBase + 0x1000 * BlockIndex +
+				Chunk = (byte*)(m_VirtualBase + 0x1000 * BlockIndex +
 					(i << (BlockIndex + 1)));
 				m_FreeMap[FreeMapOffset + i] = true;
 				return true;

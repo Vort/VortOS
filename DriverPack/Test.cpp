@@ -5,11 +5,10 @@
 // ----------------------------------------------------------------------------
 void Entry()
 {
-	dword BAR0 = 0xD4000000;
-	dword BAR1 = 0xDC000000;
-	dword mmioSMID = KeAllocSharedMemAt(0x1000000, BAR0);
-	dword vramSMID = KeAllocSharedMemAt(0x1000000, BAR1);
-	byte* mmioBase = KeMapSharedMem(mmioSMID);
-	byte* vramBase = KeMapSharedMem(vramSMID);
+	for (int i = 0; i < 10000; i++)
+	{
+		byte* a = new byte[0x100000];
+		delete a;
+	}
 }
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

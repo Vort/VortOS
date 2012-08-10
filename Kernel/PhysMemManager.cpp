@@ -180,6 +180,7 @@ void CPhysMemManager::EnableProtection()
 		mov  cr3, eax
 
 		mov  eax, cr0
+		// FIXME: WTF is this?
 		or   eax, 1 << 31 // Set PG 1 (Enable Paging)
 		or   eax, 1 << 31 // Set CD 1 (Disable Cache)
 		or   eax, 1 << 16 // Set WP 1 (Enable Write Protect)

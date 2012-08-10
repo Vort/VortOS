@@ -1,6 +1,5 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // VirtMemManager.h
-#pragma once
 #include "Library/Array2.h"
 
 #include "PhysMemManager.h"
@@ -11,11 +10,14 @@
 class CVirtMemManager
 {
 public:
-	CVirtMemManager(CPhysMemManager& PMM, dword FreeBlocksBase)
+	CVirtMemManager(CPhysMemManager& PMM, dword allocBaseMin, dword allocBaseMax)
 		: m_PMM(PMM)
 	{
 		m_PD = new (_allocPage()) CPD();
-		m_FreeBlock = FreeBlocksBase;
+		m_AllocBaseMin = allocBaseMin;
+		m_AllocBaseMax = allocBaseMax;
+		ErrIf(allocBaseMin & 0x3FFFFF);
+		ErrIf(allocBaseMax & 0x3FFFFF);
 	}
 
 	~CVirtMemManager()
@@ -29,13 +31,13 @@ public:
 		return m_AllocatedPages.Size();
 	}
 
-	void MapPhysPageToVirtPage(dword PhysBase, dword VirtBase, bool IsWriteEnabled = true)
+	void MapPageAt(dword physBase, dword virtBase, bool isWriteEnabled)
 	{
-		dword AlPhysBase = PhysBase & ~0xFFF;
-		dword VirtPDEIndex = m_PD->ConvertBaseToPDEIndex(VirtBase);
-		dword VirtPTEIndex = m_PD->ConvertBaseToPTEIndex(VirtBase);
+		dword alPhysBase = physBase & ~0xFFF;
+		dword virtPDEIndex = m_PD->ConvertBaseToPDEIndex(virtBase);
+		dword virtPTEIndex = m_PD->ConvertBaseToPTEIndex(virtBase);
 
-		CPDE& PDE = m_PD->GetPDE(VirtPDEIndex);
+		CPDE& PDE = m_PD->GetPDE(virtPDEIndex);
 		if (!PDE.IsPresent())
 		{
 			dword NewPageTableBase = (dword)_allocPage();
@@ -43,40 +45,89 @@ public:
 			PDE.SetBase(NewPageTableBase);
 			PDE.SetPresent(true);
 		}
-		CPTE& PTE = PDE.GetPT().GetPTE(VirtPTEIndex);
+		CPTE& PTE = PDE.GetPT().GetPTE(virtPTEIndex);
 		
 		ErrIf(PTE.IsPresent());
-		PTE.SetBase(PhysBase, false);
+		PTE.SetBase(physBase, false);
 		PTE.SetPresent(true, false);
-		PTE.SetWrite(IsWriteEnabled, false);
+		PTE.SetWrite(isWriteEnabled, false);
 	}
 
-	void MapPhysBlockToVirtBlock(dword PhysBase, dword VirtBase,
-		dword PageCount, bool IsWriteEnabled = true)
+	void MapBlockAt(dword physBase, dword virtBase, dword pageCount, bool isWriteEnabled)
 	{
-		for (dword i = 0; i < PageCount; i++)
-			MapPhysPageToVirtPage(PhysBase + i*4096, VirtBase + i*4096, IsWriteEnabled);
+		for (dword i = 0; i < pageCount; i++)
+			MapPageAt(physBase + i * 4096, virtBase + i * 4096, isWriteEnabled);
 	}
 
-	dword MapNextPage(dword PhysBase)
+	dword MapBlock(dword* pages, dword pageCount)
 	{
-		MapPhysPageToVirtPage(PhysBase, m_FreeBlock);
-		dword R = m_FreeBlock;
-		m_FreeBlock += 0x1000;
-		return R;
-	}
+		dword minPdeIndex = m_PD->ConvertBaseToPDEIndex(m_AllocBaseMin);
+		dword maxPdeIndex = m_PD->ConvertBaseToPDEIndex(m_AllocBaseMax);
 
-	void UnmapVirtBlock(dword VirtBase, dword PageCount)
-	{
-		dword AlVirtBase = VirtBase & ~0xFFF;
-		for (dword i = 0; i < PageCount; i++)
+		dword blockSize = -1;
+		dword blockStartIndex = -1;
+
+		for (int i = 0; i < 2; i++)
 		{
-			dword VirtPDEIndex = m_PD->ConvertBaseToPDEIndex(AlVirtBase);
-			dword VirtPTEIndex = m_PD->ConvertBaseToPTEIndex(AlVirtBase);
-			CPDE& PDE = m_PD->GetPDE(VirtPDEIndex);
+			for (int pdeIndex = minPdeIndex; pdeIndex < maxPdeIndex; pdeIndex++)
+			{
+				CPDE& pde = m_PD->GetPDE(pdeIndex);
+				for (int pteIndex = 0; pteIndex < 1024; pteIndex++)
+				{
+					int expandCount = -1;
+					if (!pde.IsPresent())
+					{
+						if (i == 1)
+							expandCount = 1024;
+					}
+					else
+					{
+						CPTE& pte = pde.GetPT().GetPTE(pteIndex);
+						if (!pte.IsPresent())
+							expandCount = 1;
+					}
+					if (expandCount == -1)
+					{
+						blockSize = -1;
+						blockStartIndex = -1;
+					}
+					else
+					{
+						if (blockStartIndex == -1)
+						{
+							blockStartIndex = m_PD->GetGlobalIndexFromPDEPTEIndex(pdeIndex, pteIndex);
+							blockSize = 0;
+						}
+						blockSize += expandCount;
+						if (blockSize >= pageCount)
+						{
+							for (int j = 0; j < pageCount; j++)
+							{
+								MapPageAt(pages[j], (blockStartIndex + j) * 0x1000, true);
+							}
+							return blockStartIndex * 0x1000;
+						}
+					}
+					if (!pde.IsPresent())
+						break;
+				}
+			}
+		}
+
+		ErrIf(true);
+	}
+
+	void UnmapBlock(dword virtBase, dword pageCount)
+	{
+		dword alVirtBase = virtBase & ~0xFFF;
+		for (dword i = 0; i < pageCount; i++)
+		{
+			dword virtPDEIndex = m_PD->ConvertBaseToPDEIndex(alVirtBase);
+			dword virtPTEIndex = m_PD->ConvertBaseToPTEIndex(alVirtBase);
+			CPDE& PDE = m_PD->GetPDE(virtPDEIndex);
 			if (PDE.IsPresent())
-				PDE.GetPT().GetPTE(VirtPTEIndex).SetPresent(false, true);
-			AlVirtBase += 0x1000;
+				PDE.GetPT().GetPTE(virtPTEIndex).SetPresent(false, true);
+			alVirtBase += 0x1000;
 		}
 	}
 
@@ -274,7 +325,8 @@ private:
 	CPhysMemManager& m_PMM;
 	CPD* m_PD;
 
-	dword m_FreeBlock;
+	dword m_AllocBaseMin;
+	dword m_AllocBaseMax;
 
 	CArray<dword> m_AllocatedPages;
 };

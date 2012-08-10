@@ -25,14 +25,12 @@ public:
 		if (m_ChainSize == 0)
 			return;
 
-		m_VirtualBase = VMM->MapNextPage(ChainBase[0]);
-		for (dword i = 1; i < m_ChainSize; i++)
-			VMM->MapNextPage(ChainBase[i]);
+		m_VirtualBase = VMM->MapBlock(ChainBase, m_ChainSize);
 	}
 
 	~CChainMapping()
 	{
-		m_VMM->UnmapVirtBlock(m_VirtualBase, m_ChainSize);
+		m_VMM->UnmapBlock(m_VirtualBase, m_ChainSize);
 	}
 
 	dword GetVirtualBase()
