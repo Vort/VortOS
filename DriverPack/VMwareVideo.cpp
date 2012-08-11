@@ -22,9 +22,11 @@ public:
 
 		dword FrameBufSMID = KeAllocSharedMemAt(
 			Width * Height * 4, FB);
-		byte* FBData = KeMapSharedMem(FrameBufSMID);
-		for (dword i = 0; i < 800*600; i++)
-			(PD(FBData))[i] = 0;
+		byte* FrameBuf = KeMapSharedMem(FrameBufSMID);
+		for (dword i = 0; i < Width * Height; i++)
+			((dword*)FrameBuf)[i] = 0;
+
+		KeUnmapSharedMem(FrameBufSMID);
 
 		KeEnableCallRequest(ClVideo_GetFrameSurface);
 		KeEnableCallRequest(ClVideo_GetCaps);

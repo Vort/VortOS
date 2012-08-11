@@ -56,14 +56,17 @@ public:
 		return CM->GetVirtualBase();
 	}
 
-	void UnmapProcess(dword PID)
+	bool UnmapProcess(dword PID)
 	{
 		for (dword i = 0; i < m_Mappings.Size(); i++)
+		{
 			if (m_Mappings[i]->GetPID() == PID)
 			{
 				m_Mappings.Delete(i);
-				return;
+				return true;
 			}
+		}
+		return false;
 	}
 
 private:

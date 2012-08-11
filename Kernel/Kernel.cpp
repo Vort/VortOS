@@ -906,6 +906,24 @@ void CKernel::OnKeSetGeneralProtectionExceptionHandler()
 }
 
 // ----------------------------------------------------------------------------
+void CKernel::OnKeUnmapSharedMem()
+{
+	if (m_KeCallInDataSize != 4) return;
+	if (m_KeCallOutDataSize != 0) return;
+
+	dword PID = m_ActiveThread->GetID();
+	dword SMID = (PD(m_KeCallInDataBuf))[0];
+	for (dword i = 0; i < m_MMChains.Size(); i++)
+	{
+		if (m_MMChains[i]->GetID() == SMID)
+		{
+			m_MMChains[i]->UnmapProcess(PID);
+			break;
+		}
+	}
+}
+
+// ----------------------------------------------------------------------------
 void CKernel::OnKeCall(dword FunctionIndex)
 {
 	m_KeCallRealOutDataSize = m_KeCallOutDataSize;
@@ -954,6 +972,7 @@ void CKernel::OnKeCall(dword FunctionIndex)
 	case 46: OnKeResetSymbol(); break;
 	case 47: OnKeEndOfInterrupt(); break;
 	case 48: OnKeSetGeneralProtectionExceptionHandler(); break;
+	case 49: OnKeUnmapSharedMem(); break;
 	}
 }
 

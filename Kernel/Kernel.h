@@ -111,6 +111,7 @@ public:
 	void OnKeResetSymbol();
 	void OnKeEndOfInterrupt();
 	void OnKeSetGeneralProtectionExceptionHandler();
+	void OnKeUnmapSharedMem();
 
 private:
 	dword m_TickCount;

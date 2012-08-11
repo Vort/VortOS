@@ -27,6 +27,11 @@ public:
 		for (dword i = 0; i < width * height; i++)
 			((dword*)vramBase)[i] = 0;
 
+		mmioBase = null;
+		vramBase = null;
+		KeUnmapSharedMem(vramSMID);
+		KeReleaseSharedMem(mmioSMID);
+
 		KeEnableCallRequest(ClVideo_GetFrameSurface);
 		KeEnableCallRequest(ClVideo_GetCaps);
 		KeEnableCallRequest(ClVideo_GetQuantSize);

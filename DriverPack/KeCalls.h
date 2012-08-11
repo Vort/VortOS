@@ -436,4 +436,10 @@ void KeSetGeneralProtectionExceptionHandler(void* Address)
 {
 	GenericKeCall(48, 4, 0, PB(&Address), 0);
 }
+
+// ----------------------------------------------------------------------------
+void KeUnmapSharedMem(dword SMID)
+{
+	GenericKeCall(49, 4, 0, PB(&SMID), 0);
+}
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

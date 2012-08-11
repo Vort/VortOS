@@ -19,7 +19,7 @@ public:
 
 		dword FrameBufSMID = KeAllocSharedMemAt(
 			Width * Height * 4, 0xE0000000);
-		byte* FB = KeMapSharedMem(FrameBufSMID);
+		byte* FrameBuf = KeMapSharedMem(FrameBufSMID);
 
 		VBEWrite(0x4, 0x00);
 		VBEWrite(0x1, Width);
@@ -27,8 +27,10 @@ public:
 		VBEWrite(0x3, 32); // BPP
 		VBEWrite(0x4, 0x01 | 0x40);
 
-		for (dword i = 0; i < 800*600; i++)
-			(PD(FB))[i] = 0;
+		for (dword i = 0; i < Width * Height; i++)
+			((dword*)FrameBuf)[i] = 0;
+
+		KeUnmapSharedMem(FrameBufSMID);
 
 		KeEnableCallRequest(ClVideo_GetFrameSurface);
 		KeEnableCallRequest(ClVideo_GetCaps);

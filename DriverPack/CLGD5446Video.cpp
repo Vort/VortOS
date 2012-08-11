@@ -28,10 +28,12 @@ public:
 		dword Height = 600;
 
 		dword FrameBufSMID = KeAllocSharedMemAt(
-			/*4*1024*1024*/Width * Height * 4, m_FBBase);
-		byte* FB = KeMapSharedMem(FrameBufSMID);
-		for (dword i = 0; i < 800*600; i++)
-			(PD(FB))[i] = 0;
+			Width * Height * 4, m_FBBase);
+		byte* FrameBuf = KeMapSharedMem(FrameBufSMID);
+		for (dword i = 0; i < Width * Height; i++)
+			((dword*)FrameBuf)[i] = 0;
+
+		KeUnmapSharedMem(FrameBufSMID);
 
 		InitCLV();
 
