@@ -19,9 +19,6 @@ public:
 
 	dword GetTotalPagesCount();
 	dword GetUsedPagesCount();
-	byte* GetPageDirectoryBase();
-
-	void EnableProtection();
 
 private:
 	void AllocPageAt(byte* Base, bool IsWritable);

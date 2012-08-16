@@ -5,7 +5,7 @@
 // ----------------------------------------------------------------------------
 CGDT::CGDT(CPhysMemManager& PMM)
 {
-	m_Descriptors = (CDescriptor*)PMM.AllocPage();;
+	m_Descriptors = (CDescriptor*)PMM.AllocPage();
 
 	for (dword i = 0; i < Size; i++)
 		m_IsOccupied[i] = false;
@@ -15,7 +15,6 @@ CGDT::CGDT(CPhysMemManager& PMM)
 	byte GDTPseudoDescriptor[6];
 	*PW(&GDTPseudoDescriptor[0]) = 0x07FF;
 	*PD(&GDTPseudoDescriptor[2]) = dword(m_Descriptors);
-//	qword GDTPseudoDescriptor = (dword(m_Descriptors) << 16) | 0x0FFF;
 	__asm lgdt GDTPseudoDescriptor
 }
 

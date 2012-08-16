@@ -48,9 +48,9 @@ public:
 		CPTE& PTE = PDE.GetPT().GetPTE(virtPTEIndex);
 		
 		ErrIf(PTE.IsPresent());
-		PTE.SetBase(physBase, false);
-		PTE.SetPresent(true, false);
-		PTE.SetWrite(isWriteEnabled, false);
+		PTE.SetBase(physBase);
+		PTE.SetPresent(true);
+		PTE.SetWritable(isWriteEnabled);
 	}
 
 	void MapBlockAt(dword physBase, dword virtBase, dword pageCount, bool isWriteEnabled)
@@ -126,7 +126,7 @@ public:
 			dword virtPTEIndex = m_PD->ConvertBaseToPTEIndex(alVirtBase);
 			CPDE& PDE = m_PD->GetPDE(virtPDEIndex);
 			if (PDE.IsPresent())
-				PDE.GetPT().GetPTE(virtPTEIndex).SetPresent(false, true);
+				PDE.GetPT().GetPTE(virtPTEIndex).SetPresent(false);
 			alVirtBase += 0x1000;
 		}
 	}

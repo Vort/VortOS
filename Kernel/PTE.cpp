@@ -1,13 +1,21 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // PTE.cpp
 #include "PTE.h"
+#include "Intrinsics.h"
 
 // ----------------------------------------------------------------------------
 CPTE::CPTE()
 {
-	*(dword*)this = 0;
-	m_RW = 1;
+	m_Present = 0;
+	m_Writable = 1;
 	m_IsUser = 1;
+	m_PWT = 0;
+	m_PCD = 0;
+	m_Accessed = 0;
+	m_Dirty = 0;
+	m_Reserved = 0;
+	m_Avail = 0;
+	m_Base = 0;
 }
 
 // ----------------------------------------------------------------------------
@@ -23,18 +31,16 @@ byte CPTE::GetAvail()
 }
 
 // ----------------------------------------------------------------------------
-void CPTE::SetWrite(bool Enable, bool Invd)
+void CPTE::SetWritable(bool Enabled)
 {
-	m_RW = Enable;
-	if (Invd) InvalidateEntry();
+	m_Writable = Enabled;
 }
 
 // ----------------------------------------------------------------------------
-void CPTE::SetBase(dword Base, bool Invd)
+void CPTE::SetBase(dword Base)
 {
 	ErrIf(Base << 20);
 	m_Base = Base >> 12;
-	if (Invd) InvalidateEntry();
 }
 
 // ----------------------------------------------------------------------------
@@ -50,20 +56,15 @@ bool CPTE::IsPresent()
 }
 
 // ----------------------------------------------------------------------------
-void CPTE::SetPresent(bool Present, bool Invd)
+void CPTE::SetPresent(bool Present)
 {
 	m_Present = Present;
-	if (Invd) InvalidateEntry();
 }
 
 // ----------------------------------------------------------------------------
-void CPTE::InvalidateEntry()
+void CPTE::Invalidate()
 {
-	dword Base = GetBase();
-	__asm
-	{
-		mov eax, Base
-		invlpg [eax]
-	}
+	// TODO: Check if this is correct
+	__invlpg((void*)GetBase());
 }
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

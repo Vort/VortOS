@@ -3,6 +3,7 @@
 #include "Library/Defs.h"
 #include "PhysMemManager.h"
 #include "OpNewDel.h"
+#include "Intrinsics.h"
 
 // ----------------------------------------------------------------------------
 CPhysMemManager::CPhysMemManager()
@@ -18,15 +19,15 @@ CPhysMemManager::CPhysMemManager()
 	PDE.SetBase(0x4000);
 	PDE.SetPresent(true);
 
-	PT->GetPTE(1).SetBase(0x1000, false);
-	PT->GetPTE(2).SetBase(0x2000, false);
-	PT->GetPTE(3).SetBase(0x3000, false);
-	PT->GetPTE(4).SetBase(0x4000, false);
+	PT->GetPTE(1).SetBase(0x1000);
+	PT->GetPTE(2).SetBase(0x2000);
+	PT->GetPTE(3).SetBase(0x3000);
+	PT->GetPTE(4).SetBase(0x4000);
 
-	PT->GetPTE(1).SetPresent(true, false);   // 0x001000 - Kernel Stack
-	PT->GetPTE(2).SetPresent(true, false);   // 0x002000 - Kernel Stack
-	PT->GetPTE(3).SetPresent(true, false);   // 0x003000 - Page Directory
-	PT->GetPTE(4).SetPresent(true, false);   // 0x004000 - Page Table
+	PT->GetPTE(1).SetPresent(true);   // 0x001000 - Kernel Stack
+	PT->GetPTE(2).SetPresent(true);   // 0x002000 - Kernel Stack
+	PT->GetPTE(3).SetPresent(true);   // 0x003000 - Page Directory
+	PT->GetPTE(4).SetPresent(true);   // 0x004000 - Page Table
 
 	m_PNANRPageCount = 1024 - GetReservedPageCountInPDE(0) - m_UsedPagesCount;
 }
@@ -59,7 +60,8 @@ void CPhysMemManager::ReleasePage(byte* Base)
 	CPTE& PTE = PDE.GetPT().GetPTE(PTEIndex);
 	ErrIf(!PTE.IsPresent());
 
-	PTE.SetPresent(false, true);
+	PTE.SetPresent(false);
+	PTE.Invalidate();
 
 	if (!IsPageReserved(Base))
 	{
@@ -166,29 +168,6 @@ dword CPhysMemManager::GetUsedPagesCount()
 }
 
 // ----------------------------------------------------------------------------
-byte* CPhysMemManager::GetPageDirectoryBase()
-{
-	return PB(0x3000);
-}
-
-// ----------------------------------------------------------------------------
-void CPhysMemManager::EnableProtection()
-{
-	__asm
-	{
-		mov  eax, 0x3000
-		mov  cr3, eax
-
-		mov  eax, cr0
-		// FIXME: WTF is this?
-		or   eax, 1 << 31 // Set PG 1 (Enable Paging)
-		or   eax, 1 << 31 // Set CD 1 (Disable Cache)
-		or   eax, 1 << 16 // Set WP 1 (Enable Write Protect)
-		mov  cr0, eax
-	}
-}
-
-// ----------------------------------------------------------------------------
 void CPhysMemManager::AllocPageAt(byte* Base, bool IsWritable)
 {
 	ErrIf((dword(Base) & 0xFFF) != 0);
@@ -267,9 +246,10 @@ byte* CPhysMemManager::AllocPageAtPTE(CPTE& PTE, dword PDEIndex, dword PTEIndex,
 
 	dword Base = (PDEIndex << 22) | (PTEIndex << 12);
 
-	PTE.SetBase(Base, false);
-	PTE.SetWrite(IsWritable, false);
-	PTE.SetPresent(true, true);
+	PTE.SetBase(Base);
+	PTE.SetWritable(IsWritable);
+	PTE.SetPresent(true);
+	PTE.Invalidate();
 
 	if (!IsPageReserved(PB(Base)))
 	{

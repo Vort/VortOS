@@ -5,6 +5,7 @@
 #include "Kernel.h"
 #include "Global.h"
 
+#include "BitOp.h"
 #include "Intrinsics.h"
 
 // ----------------------------------------------------------------------------
@@ -81,14 +82,15 @@ bool IsKernelOK(CKernelHeader& KH, dword* BootInfo)
 }
 
 // ----------------------------------------------------------------------------
-void EnableFP()
+void SetupCR0()
 {
-	__asm
-	{
-		mov  eax, cr0
-		or   eax, 1 << 5 // Set NE 1 (Enable Internal FP Mode)
-		mov  cr0, eax
-	}
+	dword cr0 = __readcr0();
+	SetBit(cr0, 31);   // Set PG 1 (Enable Paging)
+	ClearBit(cr0, 30); // Set CD 0 (Enable Cache)
+	ClearBit(cr0, 29); // Set NW 0 (Enable Writethrough)
+	SetBit(cr0, 16);   // Set WP 1 (Enable Write Protect)
+	SetBit(cr0, 5);    // Set NE 1 (Enable Internal FP Mode)
+	__writecr0(cr0);
 }
 
 // ----------------------------------------------------------------------------
@@ -140,7 +142,6 @@ void Entry()
 		}
 	}
 
-	EnableFP();
 	InitPIT();
 
 	CPhysMemManager PMM;
@@ -148,7 +149,8 @@ void Entry()
 	PMM.AllocBlockAt(KH->GetKernelRDataBase(), KH->m_KernelRDataPageCount, false);
 	PMM.AllocBlockAt(KH->GetKernelDataBase(), KH->m_KernelDataPageCount, true);
 	PMM.AllocBlockAt(PB(0x000B8000), 8, true);
-	PMM.EnableProtection();
+	__writecr3(0x3000);
+	SetupCR0();
 
 	for (dword i = 0; i < DriversCount; i++)
 	{
@@ -168,7 +170,7 @@ void Entry()
 	CHeap SysHeap(PB(HeapBlock), HeapPageCount * 4096);
 	g_SysHeap = &SysHeap;
 
-	CTask KernelTask(GDT, true, 0, 0, 0, 0, dword(PMM.GetPageDirectoryBase()));
+	CTask KernelTask(GDT, true, 0, 0, 0, 0, 0x3000);
 	KernelTask._setActive();
 
 	CIntManager IM(PMM, KernelTask.GetTSS().GetSelector());

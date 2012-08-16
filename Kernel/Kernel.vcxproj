@@ -42,7 +42,6 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BitOp.cpp" />
     <ClCompile Include="GDT.cpp" />
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="IDT.cpp" />
