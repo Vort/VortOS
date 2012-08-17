@@ -29,17 +29,17 @@ class CKernelHeader
 public:
 	byte* GetKernelCodeBase()
 	{
-		return PB(g_KernelCodeBase);
+		return (byte*)CMemMap::c_KernelCodeBase;
 	}
 
 	byte* GetKernelRDataBase()
 	{
-		return PB(g_KernelCodeBase + (m_KernelCodePageCount << 12));
+		return (byte*)(CMemMap::c_KernelCodeBase + (m_KernelCodePageCount << 12));
 	}
 
 	byte* GetKernelDataBase()
 	{
-		return PB(GetKernelRDataBase() + (m_KernelRDataPageCount << 12));
+		return (byte*)(GetKernelRDataBase() + (m_KernelRDataPageCount << 12));
 	}
 
 	dword GetKernelPagesCount()
@@ -111,8 +111,8 @@ void Entry()
 	_outpw(0x3D4, 0x070E);
 	_outpw(0x3D4, 0xD00F);
 
-	CKernelHeader* KH = (CKernelHeader*)g_KernelImageBase;
-	dword* BootInfo = PD(*PD(g_KernelImageBase + 0x100));
+	CKernelHeader* KH = (CKernelHeader*)CMemMap::c_KernelImageBase;
+	dword* BootInfo = (dword*)(*(dword*)(CMemMap::c_KernelImageBase + 0x100));
 
 	RawOutString("Checking Kernel...", 0, 0, 0xA);
 	if (IsKernelOK(*KH, BootInfo))
