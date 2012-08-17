@@ -14,8 +14,8 @@ void RawOutString(const char* Msg, dword X, dword Y, byte Color)
 {
 	if (X > 79) return;
 	if (Y > 24) return;
-	char* Buf = PC(0xB8000);
-	Buf += (Y * 80 + X)*2;
+	char* Buf = (char*)CMemMap::c_VideoRamTextBase;
+	Buf += (Y * 80 + X) * 2;
 	for (dword i = 0; Msg[i] != 0; i++)
 	{
 		*Buf++ = Msg[i];

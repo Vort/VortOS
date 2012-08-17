@@ -2,6 +2,7 @@
 // Kernel.cpp
 #include "Kernel.h"
 #include "Global.h"
+#include "MemMap.h"
 #include "FString.h"
 #include "Intrinsics.h"
 #include "CRC32.h"
@@ -63,7 +64,7 @@ CKernel::CKernel(CTask& KernelTask, CPhysMemManager& PMM, CIntManager& IM,
 			DriverInfos[i].GetImagePageCount());
 	}
 
-	PMM.ReleaseBlock(PB(0xB8000), 0x8); // 0x0B8000 - Video RAM
+	PMM.ReleaseBlock((byte*)CMemMap::c_VideoRamTextBase, 0x8);
 	Loop();
 }
 

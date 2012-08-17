@@ -312,8 +312,11 @@ bool CPhysMemManager::IsPageReserved(byte* Base)
 	if (DBase == 0)
 		return true;
 
-	if ((DBase >= 0x000A0000) && (DBase < 0x00100000))
+	if ((DBase >= CMemMap::c_VideoRamGraphBase) &&
+		(DBase < CMemMap::c_FirstMegabyteEnd))
+	{
 		return true;
+	}
 
 	if (DBase >= m_FirstNonMappedPageIndex * 0x1000)
 		return true;
