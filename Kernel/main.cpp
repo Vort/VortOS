@@ -2,6 +2,7 @@
 // main.cpp
 #include "CRC32.h"
 
+#include "MemMap.h"
 #include "Kernel.h"
 #include "Global.h"
 
@@ -148,8 +149,8 @@ void Entry()
 	PMM.AllocBlockAt(KH->GetKernelCodeBase(), KH->m_KernelCodePageCount, false);
 	PMM.AllocBlockAt(KH->GetKernelRDataBase(), KH->m_KernelRDataPageCount, false);
 	PMM.AllocBlockAt(KH->GetKernelDataBase(), KH->m_KernelDataPageCount, true);
-	PMM.AllocBlockAt(PB(0x000B8000), 8, true);
-	__writecr3(0x3000);
+	PMM.AllocBlockAt((byte*)CMemMap::c_VideoRamTextBase, 8, true);
+	__writecr3(CMemMap::c_PmmPageDirectory);
 	SetupCR0();
 
 	for (dword i = 0; i < DriversCount; i++)
@@ -170,7 +171,7 @@ void Entry()
 	CHeap SysHeap(PB(HeapBlock), HeapPageCount * 4096);
 	g_SysHeap = &SysHeap;
 
-	CTask KernelTask(GDT, true, 0, 0, 0, 0, 0x3000);
+	CTask KernelTask(GDT, true, 0, 0, 0, 0, CMemMap::c_PmmPageDirectory);
 	KernelTask._setActive();
 
 	CIntManager IM(PMM, KernelTask.GetTSS().GetSelector());

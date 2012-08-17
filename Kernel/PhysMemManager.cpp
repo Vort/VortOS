@@ -1,6 +1,7 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // PhysMemManager.cpp
 #include "Library/Defs.h"
+#include "MemMap.h"
 #include "PhysMemManager.h"
 #include "OpNewDel.h"
 #include "Intrinsics.h"
@@ -12,11 +13,11 @@ CPhysMemManager::CPhysMemManager()
 	m_TotalPagesCount = m_FirstNonMappedPageIndex - (0x60 + 1);
 	m_UsedPagesCount = 4;
 
-	m_PD = new(PB(0x3000)) CPD();
-	CPT* PT = new(PB(0x4000)) CPT();
+	m_PD = new((byte*)CMemMap::c_PmmPageDirectory) CPD();
+	CPT* PT = new((byte*)CMemMap::c_PmmFirstPageTable) CPT();
 
 	CPDE& PDE = m_PD->GetPDE(0);
-	PDE.SetBase(0x4000);
+	PDE.SetBase(CMemMap::c_PmmFirstPageTable);
 	PDE.SetPresent(true);
 
 	PT->GetPTE(1).SetBase(0x1000);

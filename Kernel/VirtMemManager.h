@@ -59,6 +59,16 @@ public:
 			MapPageAt(physBase + i * 4096, virtBase + i * 4096, isWriteEnabled);
 	}
 
+	dword MapBlock(dword physBase, dword pageCount)
+	{
+		dword* pages = new dword[pageCount];
+		for (dword i = 0; i < pageCount; i++)
+			pages[i] = physBase + i * 4096;
+		dword virtAddr = MapBlock(pages, pageCount);
+		delete pages;
+		return virtAddr;
+	}
+
 	dword MapBlock(dword* pages, dword pageCount)
 	{
 		dword minPdeIndex = m_PD->ConvertBaseToPDEIndex(m_AllocBaseMin);

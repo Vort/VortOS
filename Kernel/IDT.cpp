@@ -2,6 +2,7 @@
 // IDT.cpp
 #include "IDT.h"
 #include "Intrinsics.h"
+#include "MemMap.h"
 
 // ----------------------------------------------------------------------------
 CIDT::CIDT(CPhysMemManager& PMM)
@@ -13,7 +14,7 @@ CIDT::CIDT(CPhysMemManager& PMM)
 
 	byte IDTPseudoDescriptor[6];
 	*PW(&IDTPseudoDescriptor[0]) = 0x07FF;
-	*PD(&IDTPseudoDescriptor[2]) = c_IdtVBase;
+	*PD(&IDTPseudoDescriptor[2]) = CMemMap::c_IdtVBase;
 	__lidt(&IDTPseudoDescriptor);
 }
 

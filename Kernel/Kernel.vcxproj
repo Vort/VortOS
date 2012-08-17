@@ -74,6 +74,7 @@
     <ClInclude Include="Intrinsics.h" />
     <ClInclude Include="Kernel.h" />
     <ClInclude Include="List.h" />
+    <ClInclude Include="MemMap.h" />
     <ClInclude Include="MultiMappedChain.h" />
     <ClInclude Include="Notification.h" />
     <ClInclude Include="NotificationQueue.h" />

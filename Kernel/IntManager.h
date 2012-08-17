@@ -17,8 +17,6 @@ public:
 	dword GetHandlersBase();
 	CIDT& GetIDT();
 
-	static const dword c_IntHandlersVBase = 0xFFFFD000;
-
 private:
 	CIDT m_IDT;
 	byte* m_IntHandlers;

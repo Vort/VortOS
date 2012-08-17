@@ -21,7 +21,6 @@ public:
 	CGate& GetGateByIndex(dword Index);
 
 	static const dword Size = 256;
-	static const dword c_IdtVBase = 0xFFFFC000;
 
 private:
 	CGate* m_Gates;

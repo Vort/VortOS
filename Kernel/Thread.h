@@ -169,18 +169,9 @@ private:
 
 	byte* m_Ring0Stack;
 	byte* m_Ring3Stack;
+	dword m_Ring3StackVBase;
 
 	dword m_GPEHandler;
-
-	static const dword c_ImageBase          = 0x00400000;
-	static const dword c_StackVBase         = 0x00700000;
-	static const dword c_VMMAllocMinVBase   = 0x00800000;
-	static const dword c_VMMAllocMaxVBase   = 0xF0000000;
-	static const dword c_UserHeapVBase      = 0xFFFF1000;
-	//static const dword c_IdtVBase         = 0xFFFFC000;
-	//static const dword c_IntHandlersVBase = 0xFFFFD000;
-	static const dword c_R0StackVBase       = 0xFF0FE000;
-	static const dword c_ServiceFuncVBase   = 0xFF0FF000;
 
 	static const dword c_StackPageCount = 4;
 

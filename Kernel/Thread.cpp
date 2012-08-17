@@ -1,8 +1,7 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Thread.cpp
 #include "Thread.h"
-#include "IDT.h"
-#include "IntManager.h"
+#include "MemMap.h"
 
 // ----------------------------------------------------------------------------
 CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
@@ -26,7 +25,9 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 		m_KernelPerfData[i] = 0;
 	}
 
-	m_VMM = new CVirtMemManager(PMM, c_VMMAllocMinVBase, c_VMMAllocMaxVBase);
+	m_VMM = new CVirtMemManager(PMM,
+		CMemMap::c_VmmAllocMinVBase,
+		CMemMap::c_VmmAllocMaxVBase);
 
 	static dword g_ID = 0;
 	g_ID++;
@@ -34,7 +35,7 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 
 	m_Priority = Priority;
 	m_AccessLevel = AccessLevel;
-	m_UH = new CUserHeap(m_PMM, *m_VMM, c_UserHeapVBase);
+	m_UH = new CUserHeap(m_PMM, *m_VMM, CMemMap::c_UserHeapVBase);
 
 	m_WaitingFor = ThreadWaitType_Nothing;
 	m_TicksLeft = 0;
@@ -51,20 +52,20 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 
 	dword GDTBase = GDT.GetBase();
 	m_VMM->MapPageAt(GDTBase, GDTBase, true);
-	m_VMM->MapPageAt(IDTBase, CIDT::c_IdtVBase, false);
-	m_VMM->MapPageAt(IntHandleBase, CIntManager::c_IntHandlersVBase, false);
+	m_VMM->MapPageAt(IDTBase, CMemMap::c_IdtVBase, false);
+	m_VMM->MapPageAt(IntHandleBase, CMemMap::c_IntHandlersVBase, false);
 
-	dword CodeVBase = c_ImageBase + 0x1000;
+	dword CodeVBase = CMemMap::c_ImageBase + 0x1000;
 	dword RDataVBase = CodeVBase + CodePageCount * 0x1000;
 	dword DataVBase = RDataVBase + RDataPageCount * 0x1000;
 
 	m_VMM->MapBlockAt((dword)Code, CodeVBase, CodePageCount, false);
 	m_VMM->MapBlockAt((dword)RData, RDataVBase, RDataPageCount, false);
 	m_VMM->MapBlockAt((dword)Data, DataVBase, DataPageCount, true);
-	m_VMM->MapBlockAt((dword)m_Ring3Stack, c_StackVBase, c_StackPageCount, true);
+	m_Ring3StackVBase = m_VMM->MapBlock((dword)m_Ring3Stack, c_StackPageCount);
 
-	m_VMM->MapPageAt((dword)m_Ring0Stack, c_R0StackVBase, true);
-	m_VMM->MapPageAt((dword)ServiceFuncPage, c_ServiceFuncVBase, false);
+	m_VMM->MapPageAt((dword)m_Ring0Stack, CMemMap::c_R0StackVBase, true);
+	m_VMM->MapPageAt((dword)ServiceFuncPage, CMemMap::c_ServiceFuncVBase, false);
 
 	dword CodeImageBase = sizeof(CProcHeader);
 	dword RDataImageBase = CodeImageBase + CodeSize;
@@ -72,15 +73,15 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 	Image.CopyUtoP(CodeImageBase, CodeSize, Code);
 	Image.CopyUtoP(RDataImageBase, RDataSize, RData);
 	Image.CopyUtoP(DataImageBase, DataSize, Data);
-	*(dword*)(m_Ring3Stack + c_StackPageCount * 4096 - 4) = c_ServiceFuncVBase;
+	*(dword*)(m_Ring3Stack + c_StackPageCount * 4096 - 4) = CMemMap::c_ServiceFuncVBase;
 
 	// Create Task
 	m_Task = new CTask(
 		GDT, IsKernel,
 		(void*)(EntryPoint),
-		(byte*)(c_StackVBase),
-		(byte*)(c_StackVBase + c_StackPageCount * 4096 - 4),
-		(byte*)(c_R0StackVBase),
+		(byte*)(m_Ring3StackVBase),
+		(byte*)(m_Ring3StackVBase + c_StackPageCount * 4096 - 4),
+		(byte*)(CMemMap::c_R0StackVBase),
 		(dword)(&m_VMM->GetPD()));
 
 	dword TSPart1 = dword(&m_Task->GetTSS().GetTaskState()) & ~0xFFF;
@@ -244,8 +245,8 @@ void CThread::SetGPEHandler(dword Address)
 // ----------------------------------------------------------------------------
 void CThread::ResetStack()
 {
-	*(dword*)(m_Ring3Stack + c_StackPageCount * 4096 - 4) = c_ServiceFuncVBase;
-	m_Task->GetTSS().GetTaskState().ESP = c_StackVBase + c_StackPageCount * 4096 - 4;
+	*(dword*)(m_Ring3Stack + c_StackPageCount * 4096 - 4) = CMemMap::c_ServiceFuncVBase;
+	m_Task->GetTSS().GetTaskState().ESP = m_Ring3StackVBase + c_StackPageCount * 4096 - 4;
 }
 
 // ----------------------------------------------------------------------------

@@ -164,5 +164,8 @@
     <ClInclude Include="CRC32.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MemMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
