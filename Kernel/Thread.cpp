@@ -25,9 +25,7 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 		m_KernelPerfData[i] = 0;
 	}
 
-	m_VMM = new CVirtMemManager(PMM,
-		CMemMap::c_VmmAllocMinVBase,
-		CMemMap::c_VmmAllocMaxVBase);
+	m_VMM = new CVirtMemManager(PMM);
 
 	static dword g_ID = 0;
 	g_ID++;
