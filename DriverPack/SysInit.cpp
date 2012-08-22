@@ -48,8 +48,8 @@ public:
 		if (bootType == '  dc')
 		{
 			LoadKeybAndMouse();
-			CreateProcess("Partition.bin");
-			CreateProcess("FAT.bin");
+			//CreateProcess("Partition.bin");
+			//CreateProcess("FAT.bin");
 		}
 		else if (bootType == ' ddf')
 		{
@@ -69,7 +69,7 @@ public:
 			"BochsVideo.bin",
 			"CLGD5446Video.bin",
 			"S3Trio64Video.bin",
-			"GeForce3Ti500Video.bin",
+			"GeForceVideo.bin",
 			"VMwareVideo.bin",
 			"VGAVideo.bin",
 			null

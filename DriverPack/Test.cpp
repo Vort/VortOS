@@ -7,7 +7,7 @@ void Entry()
 {
 	__asm
 	{
-		push 0x0
+		push 0xC0
 		pop ds
 	}
 }

@@ -90,10 +90,9 @@
     <ClCompile Include="FillBenchmark.cpp" />
     <ClCompile Include="Floppy.cpp" />
     <ClCompile Include="Font.cpp" />
-    <ClCompile Include="GeForce3Ti500Video.cpp" />
+    <ClCompile Include="GeForceVideo.cpp" />
     <ClCompile Include="Hello.cpp" />
     <ClCompile Include="i8042.cpp" />
-    <ClCompile Include="Init.cpp" />
     <ClCompile Include="KeApiTest.cpp" />
     <ClCompile Include="NE2000.cpp" />
     <ClCompile Include="Network.cpp" />

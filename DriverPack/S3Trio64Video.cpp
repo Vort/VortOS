@@ -103,11 +103,11 @@ private:
 		// Reset Attribute Controller Flip-Flop
 		KeInPortByte(0x3DA);
 		// Set Attribute Controller Regs
-		InitRegs(0x3C0, ActlRegs, 0x10, 5);
+		InitRegs(0x03C0, 0x03C0, ActlRegs, 0x10, sizeof(ActlRegs));
 		// Set Sequencer Regs
-		InitRegs(0x3C4, SeqRegs, 0, 5);
+		InitRegs(0x3C4, SeqRegs, 0, sizeof(SeqRegs));
 		// Set Graphics Regs
-		InitRegs(0x3CE, GraphRegs, 0, 9);
+		InitRegs(0x3CE, GraphRegs, 0, sizeof(GraphRegs));
 
 		// Unlock Sequencer PLL Registers
 		KeOutPortWord(0x3C4, 0x0608);
@@ -150,7 +150,7 @@ private:
 		};
 
 		// Set CRTC Regs
-		InitRegs(0x3D4, CRTRegs, 0, 25);
+		InitRegs(0x3D4, CRTRegs, 0, sizeof(CRTRegs));
 
 		// Set Logical Screen Width Bits (8-9)
 		KeOutPortWord(0x3D4, 0x1051);
@@ -189,13 +189,18 @@ private:
 		KeOutPortWord(IndexPort, (RegValue << 8) | RegIndex);
 	}
 
-	void InitRegs(word IndexPort, byte* Data, dword BaseReg, dword Size)
+	void InitRegs(word indexPort, word dataPort, byte* data, dword regOffset, dword regCount)
 	{
-		for (dword i = 0; i < Size; i++)
+		for (dword i = 0; i < regCount; i++)
 		{
-			word W = (Data[i] << 8) | (BaseReg + i);
-			KeOutPortWord(IndexPort, W);
+			KeOutPortByte(indexPort, regOffset + i);
+			KeOutPortByte(dataPort, data[i]);
 		}
+	}
+
+	void InitRegs(word indexPort, byte* data, dword regOffset, dword regCount)
+	{
+		InitRegs(indexPort, indexPort + 1, data, regOffset, regCount);
 	}
 
 private:
