@@ -44,6 +44,7 @@
 #define Nf_MouseAbsMove 0x1082C471
 #define Nf_MouseButtonDown 0x30B48F80
 #define Nf_MouseButtonUp 0x2B148460
+#define Nf_SurfaceActivated 0x7976D15A
 
 #define Nf_MouseClick 0x512451C8
 #define Nf_MouseDoubleClick 0xBDA476AB

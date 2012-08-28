@@ -178,6 +178,10 @@ public:
 	{
 		KeWaitForSymbol(SmRenderer_Ready);
 
+		m_CursorX = -1;
+		m_CursorY = -1;
+		m_ActiveSurfaceID = -1;
+
 		dword ID;
 		GetFrameSurface(ID, m_Width, m_Height);
 		m_FrameSurface = new CSurface(ID, m_Width, m_Height, 0, 0, 0);
@@ -199,6 +203,8 @@ public:
 		KeEnableNotification(NfSurfMgr_FillSurface);
 		KeEnableNotification(NfSurfMgr_DrawRect);
 		KeEnableNotification(NfSurfMgr_TextBlit);
+		KeEnableNotification(Nf_MouseButtonDown);
+		KeEnableNotification(Nf_CursorMoveTo);
 		KeEnableNotification(NfKe_ProcessExited);
 
 		dword FontSurfaceID = 0;
@@ -243,6 +249,11 @@ public:
 						CSmartPtr<CSurface> S = new CSurface(
 							Width, Height, X, Y, Layer, CR.GetSrcPID());
 						m_Surfaces.PushBack(S);
+						if (Layer == 1)
+						{
+							m_ActiveSurfaceID = S->GetID();
+							KeNotify(Nf_SurfaceActivated, (byte*)&m_ActiveSurfaceID, 4);
+						}
 
 						CR.Respond(S->GetID());
 					}
@@ -283,7 +294,48 @@ public:
 				for (dword z = 0; z < NfCount; z++)
 				{
 					N.Recv();
-					if (N.GetID() == NfKe_ProcessExited)
+					if (N.GetID() == Nf_MouseButtonDown)
+					{
+						dword newActivatedSurfID = -1;
+						for (int i = 0; i < m_Surfaces.Size(); i++)
+						{
+							CSmartPtr<CSurface> surf = m_Surfaces[i];
+							if (surf->GetLayer() != 1)
+								continue;
+
+							int surfX;
+							int surfY;
+							dword surfW;
+							dword surfH;
+							surf->GetPosition(surfX, surfY);
+							surf->GetSize(surfW, surfH);
+							if (m_CursorX < surfX)
+								continue;
+							if (m_CursorY < surfY)
+								continue;
+							if (m_CursorX >= surfX + surfW)
+								continue;
+							if (m_CursorY >= surfY + surfH)
+								continue;
+
+							newActivatedSurfID = surf->GetID();
+						}
+						if ((newActivatedSurfID != -1) &&
+							(newActivatedSurfID != m_ActiveSurfaceID))
+						{
+							m_ActiveSurfaceID = newActivatedSurfID;
+							DebugOut(m_ActiveSurfaceID);
+							KeNotify(Nf_SurfaceActivated, (byte*)&m_ActiveSurfaceID, 4);
+							// HACK: Пока окно неактивно, нажатия не принимаются -> повторяем отправку после активации
+							KeNotify(Nf_MouseButtonDown, N.GetBuf(), 1);
+						}
+					}
+					else if (N.GetID() == Nf_CursorMoveTo)
+					{
+						m_CursorX = N.GetDword(0);
+						m_CursorY = N.GetDword(1);
+					}
+					else if (N.GetID() == NfKe_ProcessExited)
 					{
 						if (KeIsSymbolSet(SmDesktop_Terminated))
 							IsTerminating = true;
@@ -642,8 +694,13 @@ private:
 	CArray<CSmartPtr<CSurface> > m_Surfaces;
 	CArray<CSurfUpdateInfo> m_SurfUpdateInfos;
 
+	dword m_ActiveSurfaceID;
+
 	dword m_Width;
 	dword m_Height;
+
+	dword m_CursorX;
+	dword m_CursorY;
 
 	bool* m_Dirty;
 	bool* m_DirtyTemp;

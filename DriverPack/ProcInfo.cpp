@@ -31,6 +31,7 @@ public:
 		m_TickCount = 0;
 		m_KernelTime = 0;
 		m_VisualProgressIndex = 6;
+		m_SurfaceActivated = true;
 
 		m_X = 20;
 		m_Y = 20;
@@ -42,7 +43,8 @@ public:
 		KeRequestCall(ClFont_GetTextWidth, PB(&Digit), 1, PB(&m_DigitW), 4);
 
 		m_SurfaceID = CreateSurface(m_X, m_Y, m_Width, m_Height);
-		DrawRect(m_SurfaceID, 0, 0, m_Width, m_Margin * 3 + m_FontH * 4, m_BGColor);
+		DrawActiveBorder();
+		DrawRect(m_SurfaceID, 1, 1, m_Width - 2, m_Margin * 3 + m_FontH * 4 - 1, m_BGColor);
 		OutText(m_SurfaceID, m_Margin, m_Margin + m_FontH * 0, 0xFFA020A0, "Page Usage:");
 		OutText(m_SurfaceID, m_Margin, m_Margin + m_FontH * 1, 0xFFA020A0, "Heap Usage:");
 		OutText(m_SurfaceID, m_Margin, m_Margin + m_FontH * 2, 0xFFA020A0, "Kernel Time:");
@@ -55,15 +57,37 @@ public:
 		OutText(m_SurfaceID, m_Margin+128, m_Margin*2 + m_FontH * 3, 0xFFA02020, "Name");
 
 		KeEnableNotification(NfKe_IRQ0);
+		KeEnableNotification(Nf_SurfaceActivated);
 		KeEnableNotification(NfKe_TerminateProcess);
 
-		CNotification<1> N;
+		CNotification<4> N;
 		for (;;)
 		{
 			KeWaitFor(1);
 			N.Recv();
 
-			if (N.GetID() == NfKe_IRQ0)
+			if (N.GetID() == Nf_SurfaceActivated)
+			{
+				dword activatedSurfaceID = N.GetDword(0);
+
+				if (activatedSurfaceID == m_SurfaceID)
+				{
+					if (!m_SurfaceActivated)
+					{
+						m_SurfaceActivated = true;
+						DrawActiveBorder();
+					}
+				}
+				else
+				{
+					if (m_SurfaceActivated)
+					{
+						m_SurfaceActivated = false;
+						DrawActiveBorder();
+					}
+				}
+			}
+			else if (N.GetID() == NfKe_IRQ0)
 			{
 				if (m_TickCount % 144 == 0)
 				{
@@ -112,8 +136,8 @@ public:
 					m_KernelTime = (KernelTotalG << 16) / (KernelTotalG + UserTotalG);
 
 
-					DrawRect(m_SurfaceID, 0, m_Margin * 3 + m_FontH * 4,
-						m_Width, m_Height - (m_Margin * 3 + m_FontH * 4), m_BGColor);
+					DrawRect(m_SurfaceID, 1, m_Margin * 3 + m_FontH * 4,
+						m_Width - 2, m_Height - (m_Margin * 3 + m_FontH * 4) - 1, m_BGColor);
 
 					dword VisibleProcCount = m_ProcList.Size();
 					if (VisibleProcCount > m_VisibleProcCount)
@@ -203,6 +227,12 @@ public:
 		}
 	}
 
+	void DrawActiveBorder()
+	{
+		DrawFrameRect(m_SurfaceID, 0, 0, m_Width, m_Height,
+			m_SurfaceActivated ? 0xFF5E8AFF : 0xFFAAAAAA);
+	}
+
 	void OutDecimal(dword RightX, dword Y, dword Val, dword Color)
 	{
 		dword TVal = Val;
@@ -257,6 +287,7 @@ private:
 	dword m_DigitW;
 	dword m_TickCount;
 	dword m_SurfaceID;
+	bool m_SurfaceActivated;
 	dword m_VisualProgressIndex;
 
 	dword m_KernelTime;
@@ -278,120 +309,3 @@ void Entry()
 	CProcInfo PI;
 }
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-
-
-		/*
-		dword VisualProgress = 6;
-
-		KeWaitForSymbol(Sm_InitStage2);
-		KeEnableNotification(NfKe_TerminateProcess);
-		bool IsShowed = false;
-		
-		dword Width = 200;
-		dword Height = 30 * 14;
-
-		dword SurfaceID = CreateSurface(20, 20, Width, Height, 1);
-		FillSurfaceRect(SurfaceID, 0, 0, Width, 42, 0xFFFFFFFA);
-
-		OutText(SurfaceID, 1, 0, 0xFFA020A0, "Page Usage:");
-		OutText(SurfaceID, 1, 14, 0xFFA020A0, "Heap Usage:");
-		OutText(SurfaceID, 1, 28, 0xFFA020A0, "Kernel Time:");
-
-		dword ProcPIDs[32+1];
-		char IDText[5];
-		IDText[4] = 0;
-		for (;;)
-		{
-			KeGetProcessList(ProcPIDs, 32+1);
-			dword ProcessCount = ProcPIDs[0];
-
-			bool IsSorted = false;
-			while (!IsSorted)
-			{
-				IsSorted = true;
-				for (dword i = 0; i < ProcessCount-1; i++)
-					if (ProcPIDs[i+1] > ProcPIDs[i+2])
-					{
-						dword T = ProcPIDs[i+1];
-						ProcPIDs[i+1] = ProcPIDs[i+2];
-						ProcPIDs[i+2] = T;
-						IsSorted = false;
-					}
-			}
-
-			Processes.Clear();
-			for (dword i = 0; i < ProcessCount; i++)
-			{
-				CProcInfo PI;
-				PI.m_PID = ProcPIDs[i + 1];
-
-				char Name[32];
-				KeGetProcessInfo(PI.m_PID, PI.m_PageCount, PI.m_User,
-					PI.m_Kernel, PI.m_NFCount, Name);
-				PI.m_Name = CStringA(Name);
-
-				Processes.PushBack(PI);
-			}
-
-			FillSurfaceRect(SurfaceID, 0, 42, Width, Height - 42, 0xFFFFFFFA);
-
-			for (dword i = 0; i < ProcessCount; i++)
-			{
-				IDText[2] = 0;
-				ByteToString(Processes[i].m_PID & 0xFF, IDText);
-				OutText(SurfaceID, 1, 42+i*14, 0xFF2020A0, IDText);
-				WordToString(Processes[i].m_PageCount, IDText);
-				OutText(SurfaceID, 1+16, 42+i*14, 0xFF20A020, IDText);
-				WordToString(Processes[i].m_NFCount, IDText);
-				OutText(SurfaceID, 1+16+28, 42+i*14, 0xFFA0A020, IDText+1);
-				IDText[2] = 0;
-				ByteToString(Processes[i].m_User, IDText);
-				OutText(SurfaceID, 1+32+12+22, 42+i*14, 0xFF20A020, IDText);
-				IDText[2] = 0;
-				ByteToString(Processes[i].m_Kernel, IDText);
-				OutText(SurfaceID, 1+32+16+12+22, 42+i*14, 0xFF20A020, IDText);
-				OutText(SurfaceID, 1+32+10+32+22, 42+i*14, 0xFFA02020, Processes[i].m_Name._ptr());
-			}
-
-			for (int i = 0; i < 6; i++)
-			{
-				dword PageUsage = 0;
-				dword HeapUsage = 0;
-				dword KernelTime = 0;
-				KeGetMemInfo(PageUsage, HeapUsage, KernelTime);
-
-				FillSurfaceRect(SurfaceID, 64+16, 0, 32, 42, 0xFFFFFFFA);
-
-				WordToString(PageUsage, IDText);
-				OutText(SurfaceID, 64+16, 0, 0xFF20A0A0, IDText);
-				WordToString(HeapUsage, IDText);
-				OutText(SurfaceID, 64+16, 14, 0xFF20A0A0, IDText);
-				WordToString(KernelTime, IDText);
-				OutText(SurfaceID, 64+16, 28, 0xFF20A0A0, IDText);
-
-				dword PrevVP = VisualProgress;
-
-				VisualProgress++;
-				if (VisualProgress >= 6)
-					VisualProgress = 0;
-
-				FillSurfaceRect(SurfaceID, 128 + PrevVP * 8, 18, 8, 8, 0xFFFFFFFA);
-				FillSurfaceRect(SurfaceID, 128 + VisualProgress * 8, 18, 8, 8, 0xFFB0B8FF);
-				FillSurfaceRect(SurfaceID, 128 + VisualProgress * 8 + 1, 18+1, 6, 6, 0xFFD0D4FF);
-
-				if (!IsShowed)
-				{
-					ShowSurface(SurfaceID);
-					IsShowed = true;
-				}
-
-				for (int j = 0; j < 6; j++)
-				{
-					KeWaitTicks(4);
-					if (KeGetNotificationCount())
-						return;
-				}
-			}
-		}
-		*/

@@ -26,6 +26,7 @@ public:
 		m_HElSize = 110;
 		m_HDiskElSize = 22;
 		m_Margin = 2;
+		m_SurfaceActivated = true;
 
 		m_SurfW = m_HCount * m_HElSize + m_Margin * (2 + m_HCount - 1);
 		m_SurfH = m_VCount * m_VElSize + m_VDiskElSize + m_Margin * 3;
@@ -44,6 +45,7 @@ public:
 		KeEnableNotification(Nf_CursorMoveTo);
 		KeEnableNotification(Nf_MouseButtonDown);
 		KeEnableNotification(Nf_MouseDoubleClick);
+		KeEnableNotification(Nf_SurfaceActivated);
 		KeEnableNotification(NfKe_TerminateProcess);
 		KeEnableNotification(NfFileSystem_AddDisk);
 
@@ -55,8 +57,32 @@ public:
 			for (dword z = 0; z < NfCount; z++)
 			{
 				N.Recv();
-				if (N.GetID() == Nf_VirtualKey)
+				if (N.GetID() == Nf_SurfaceActivated)
 				{
+					dword activatedSurfaceID = N.GetDword(0);
+
+					if (activatedSurfaceID == m_SurfaceID)
+					{
+						if (!m_SurfaceActivated)
+						{
+							m_SurfaceActivated = true;
+							DrawActiveBorder();
+						}
+					}
+					else
+					{
+						if (m_SurfaceActivated)
+						{
+							m_SurfaceActivated = false;
+							DrawActiveBorder();
+						}
+					}
+				}
+				else if (N.GetID() == Nf_VirtualKey)
+				{
+					if (!m_SurfaceActivated)
+						continue;
+
 					if (N.GetByte(1) == 1)
 					{
 						EVirtualKey VK = EVirtualKey(N.GetByte(0));
@@ -119,6 +145,9 @@ public:
 				}
 				else if (N.GetID() == Nf_MouseButtonDown)
 				{
+					if (!m_SurfaceActivated)
+						continue;
+
 					if (N.GetByte(0) == 0)
 					{
 						dword mX = m_CursorX - m_X;
@@ -165,6 +194,9 @@ public:
 				}
 				else if (N.GetID() == Nf_MouseDoubleClick)
 				{
+					if (!m_SurfaceActivated)
+						continue;
+
 					dword mX = m_CursorX - m_X;
 					dword mY = m_CursorY - m_Y;
 					int X, Y;
@@ -189,6 +221,12 @@ public:
 					return;
 			}
 		}
+	}
+
+	void DrawActiveBorder()
+	{
+		DrawFrameRect(m_SurfaceID, 0, 0, m_SurfW, m_SurfH,
+			m_SurfaceActivated ? 0xFF5E8AFF : 0xFFAAAAAA);
 	}
 
 	void Exec()
@@ -311,6 +349,7 @@ public:
 	void DrawFrame()
 	{
 		FillSurface(m_SurfaceID, 0xFFFFFFFF);
+		DrawActiveBorder();
 	}
 
 private:
@@ -330,6 +369,7 @@ private:
 	dword m_CursorX;
 	dword m_CursorY;
 	dword m_SurfaceID;
+	bool m_SurfaceActivated;
 
 	dword m_FilesCount;
 	dword m_DiskCount;

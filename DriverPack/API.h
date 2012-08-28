@@ -323,6 +323,16 @@ void DrawRect(dword SurfID, int X, int Y, dword W, dword H, dword Color)
 }
 
 // ----------------------------------------------------------------------------
+void DrawFrameRect(dword SurfID, int X, int Y, dword W, dword H, dword Color)
+{
+	// TODO: 1. Check it. 2. Rewrite it
+	DrawRect(SurfID, X, Y, W, 1, Color);
+	DrawRect(SurfID, X, Y, 1, H, Color);
+	DrawRect(SurfID, X, Y + H - 1, W, 1, Color);
+	DrawRect(SurfID, X + W - 1, Y, 1, H, Color);
+}
+
+// ----------------------------------------------------------------------------
 void MoveSurface(dword SurfID, int X, int Y)
 {
 	dword NfBuf[3];

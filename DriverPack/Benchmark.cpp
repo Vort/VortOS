@@ -22,10 +22,7 @@ public:
 
 		m_SurfID = CreateSurface(300, 200, 256, 256 + 16);
 		FillSurface(m_SurfID, 0xFFFFFFFF);
-		DrawRect(m_SurfID, 0, 0, 256, 1, 0xFF808080);
-		DrawRect(m_SurfID, 0, 0, 1, 256+16, 0xFF808080);
-		DrawRect(m_SurfID, 0, 256+16-1, 256, 1, 0xFF808080);
-		DrawRect(m_SurfID, 256-1, 0, 1, 256+16, 0xFF808080);
+		DrawFrameRect(m_SurfID, 0, 0, 256, 256 + 16, 0xFF808080);
 		ShowSurface(m_SurfID);
 
 		KeEnableNotification(Nf_VirtualKey);

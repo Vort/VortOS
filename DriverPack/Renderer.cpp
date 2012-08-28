@@ -35,7 +35,7 @@ public:
 		m_WH = Width * Height;
 		m_BS = m_WH * 4;
 
-		static dword g_UID = 0;
+		static dword g_UID = 1;
 		m_UID = g_UID;
 		g_UID++;
 	}
