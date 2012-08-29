@@ -8,13 +8,14 @@
 #include "CRC32.h"
 
 // ----------------------------------------------------------------------------
-static byte g_IdleImage[35] =
+static byte g_IdleImage[39] =
 {
 	0x56, 0x45, 0x78, 0x65,
-	0x03, 0x00, 0x00, 0x00,
+	0x04, 0x00, 0x00, 0x00,
 	0x98, 0xA6, 0x0A, 0x33,
 	0x00, 0x10, 0x40, 0x00,
 	0x03, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 	0xFF, 0x00,
@@ -97,8 +98,8 @@ bool CKernel::AddThread(bool IsKernel, const CUniPtr& Image,
 	Image.CopyUtoP(0, sizeof(CProcHeader), (byte*)(&Header));
 
 	if (Header.m_Signature != 'exEV') return false;
-	if (Header.m_Version != 3) return false;
-	if (Header.m_CodeVSize + Header.m_DataVSize + Header.m_RDataVSize + sizeof(CProcHeader) != ImageSize)
+	if (Header.m_Version != 4) return false;
+	if (Header.m_CodeVSize + Header.m_RDataVSize + Header.m_DataRawSize + sizeof(CProcHeader) != ImageSize)
 		return false;
 
 	if (CCRC32().GetCRC32(Image, sizeof(CProcHeader), ImageSize - sizeof(CProcHeader)) != Header.m_CRC32)
@@ -107,8 +108,9 @@ bool CKernel::AddThread(bool IsKernel, const CUniPtr& Image,
 	m_TL.AppendElement(new CThread(m_PMM, m_GDT,
 		dword(&m_KernelTask.GetTSS().GetTaskState()),
 		m_IDT.GetBase(), m_IM.GetHandlersBase(), IsKernel,
-		Image, Header.m_EntryPoint, Header.m_CodeVSize, Header.m_DataVSize,
-		Header.m_RDataVSize, m_ServiceFuncPage, Header.m_Priority, Header.m_AccessLevel, Name));
+		Image, Header.m_EntryPoint, Header.m_CodeVSize, Header.m_RDataVSize,
+		Header.m_DataVSize, Header.m_DataRawSize, m_ServiceFuncPage,
+		Header.m_Priority, Header.m_AccessLevel, Name));
 	return true;
 }
 

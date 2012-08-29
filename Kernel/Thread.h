@@ -28,8 +28,9 @@ public:
 	dword m_CRC32;
 	dword m_EntryPoint;
 	dword m_CodeVSize;
-	dword m_DataVSize;
 	dword m_RDataVSize;
+	dword m_DataVSize;
+	dword m_DataRawSize;
 	word m_Priority;
 	word m_AccessLevel;
 };
@@ -74,7 +75,8 @@ public:
 		dword EntryPoint,
 		dword CodeSize,
 		dword RDataSize,
-		dword DataSize,
+		dword DataVSize,
+		dword DataRawSize,
 		byte* ServiceFuncPage,
 		byte Priority,
 		byte AccessLevel,

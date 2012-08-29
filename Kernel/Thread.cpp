@@ -7,7 +7,7 @@
 CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 				 dword IDTBase, dword IntHandleBase, bool IsKernel,
 				 const CUniPtr& Image, dword EntryPoint,
-				 dword CodeSize, dword RDataSize, dword DataSize,
+				 dword CodeSize, dword RDataSize, dword DataVSize, dword DataRawSize,
 				 byte* ServiceFuncPage, byte Priority, byte AccessLevel,
 				 const CFString<128>& Name)
 		: m_PMM(PMM), m_Name(Name), m_NotificationQueue(PMM, 8) //, m_MessageQueue(PMM, 8)
@@ -40,7 +40,7 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 
 	dword CodePageCount = (CodeSize + 4095) / 4096;
 	dword RDataPageCount = (RDataSize + 4095) / 4096;
-	dword DataPageCount = (DataSize + 4095) / 4096;
+	dword DataPageCount = (DataVSize + 4095) / 4096;
 
 	m_Ring0Stack = (byte*)AllocBlock(1);
 	m_Ring3Stack = (byte*)AllocBlock(c_StackPageCount);
@@ -70,7 +70,9 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 	dword DataImageBase = RDataImageBase + RDataSize;
 	Image.CopyUtoP(CodeImageBase, CodeSize, Code);
 	Image.CopyUtoP(RDataImageBase, RDataSize, RData);
-	Image.CopyUtoP(DataImageBase, DataSize, Data);
+	Image.CopyUtoP(DataImageBase, DataVSize, Data);
+	for (int i = 0; i < DataVSize - DataRawSize; i++)
+		Data[DataRawSize + i] = 0;
 	*(dword*)(m_Ring3Stack + c_StackPageCount * 4096 - 4) = CMemMap::c_ServiceFuncVBase;
 
 	// Create Task

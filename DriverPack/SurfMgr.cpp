@@ -324,7 +324,6 @@ public:
 							(newActivatedSurfID != m_ActiveSurfaceID))
 						{
 							m_ActiveSurfaceID = newActivatedSurfID;
-							DebugOut(m_ActiveSurfaceID);
 							KeNotify(Nf_SurfaceActivated, (byte*)&m_ActiveSurfaceID, 4);
 							// HACK: Пока окно неактивно, нажатия не принимаются -> повторяем отправку после активации
 							KeNotify(Nf_MouseButtonDown, N.GetBuf(), 1);
