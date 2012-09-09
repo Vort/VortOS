@@ -7,12 +7,53 @@ extern "C" void* memcpy(void* destination, const void* source, size_t num);
 extern "C" void* memset(void* ptr, int value, size_t num);
 
 // ----------------------------------------------------------------------------
+#pragma pack(push, 1)
+struct EthernetHeader
+{
+	byte DstMac[6];
+	byte SrcMac[6];
+	word EtherType;
+};
+struct ArpHeader
+{
+	EthernetHeader Eth;
+	word HwType;
+	word ProtoType;
+	byte HwLen;
+	byte ProtoLen;
+	word Operation;
+	byte SenderMac[6];
+	byte SenderIp[4];
+	byte TargetMac[6];
+	byte TargetIp[4];
+};
+struct IpHeader
+{
+	EthernetHeader Eth;
+	byte Ihl:4;
+	byte Version:4;
+	byte Ecn:2;
+	byte Dscp:6;
+	word TotalLength;
+	word Identification;
+	byte FragmentOffsetHi:5;
+	byte Flags:3;
+	byte FragmentOffsetLo:8;
+	byte TimeToLive;
+	byte Protocol;
+	word HeaderChecksum;
+	byte SourceIp[4];
+	byte DestinationIp[4];
+};
+#pragma pack(pop)
+
+// ----------------------------------------------------------------------------
 class Network
 {
 private:
-	byte broadcastMAC[6];
-	byte selfMAC[6];
-	byte selfIP[4];
+	byte broadcastMac[6];
+	byte selfMac[6];
+	byte selfIp[4];
 
 public:
 	Network()
@@ -21,22 +62,14 @@ public:
 
 		KeEnableNotification(NfNetwork_RecvdPacket);
 
-		memset(broadcastMAC, 0xFF, 6);
+		memset(broadcastMac, 0xFF, 6);
 
-		/*
-		selfIP[0] = 178;
-		selfIP[1] = 150;
-		selfIP[2] = 133;
-		selfIP[3] = 127;
-		*/
-		
-		selfIP[0] = 192;
-		selfIP[1] = 168;
-		selfIP[2] = 136;
-		selfIP[3] = 3;
-		
+		selfIp[0] = 192;
+		selfIp[1] = 168;
+		selfIp[2] = 150;
+		selfIp[3] = 100;
 
-		KeRequestCall(ClNetwork_GetSelfMACAddress, null, 0, selfMAC, 6);
+		KeRequestCall(ClNetwork_GetSelfMACAddress, null, 0, selfMac, 6);
 
 		CNotification<2048> N;
 		for (;;)
@@ -75,21 +108,6 @@ public:
 			ip1[3] == ip2[3];
 	}
 
-	void ReadMac(byte* buf, byte* mac)
-	{
-		memcpy(mac, buf, 6);
-	}
-
-	void ReadIp(byte* buf, byte* ip)
-	{
-		memcpy(ip, buf, 4);
-	}
-
-	word ReadWordBE(byte* buf)
-	{
-		return (buf[0] << 8) | buf[1];
-	}
-
 	void WriteMac(byte* buf, byte* mac)
 	{
 		memcpy(buf, mac, 6);
@@ -100,116 +118,93 @@ public:
 		memcpy(buf, ip, 4);
 	}
 
-	void WriteWordBE(byte* buf, word data)
+	word SwapWord(word bigEndianWord)
 	{
-		buf[0] = data >> 8;
-		buf[1] = data & 0xFF;
+		return ((bigEndianWord & 0xFF) << 8) | (bigEndianWord >> 8);
 	}
 
-	void WriteEthernet(byte* buf, byte* dstMAC, byte* srcMAC, word protoType)
+	void ProcessArp(ArpHeader* arp)
 	{
-		WriteMac(buf + 0x00, dstMAC);
-		WriteMac(buf + 0x06, srcMAC);
-		WriteWordBE(buf + 0x0C, protoType);
+		if (SwapWord(arp->HwType) != 0x0001)
+			return;
+		if (SwapWord(arp->ProtoType) != 0x0800)
+			return;
+		if (arp->HwLen != 0x06)
+			return;
+		if (arp->ProtoLen != 0x04)
+			return;
+
+		if (SwapWord(arp->Operation) == 0x0001)
+		{
+			if (!IsMacEqual(arp->Eth.SrcMac, arp->SenderMac))
+				return;
+			if (!IsMacEqual(arp->Eth.DstMac, broadcastMac))
+				if (!IsMacEqual(arp->Eth.DstMac, selfMac))
+					return;
+				
+			if (IsIpEqual(arp->TargetIp, selfIp))
+			{
+				DebugOut("[arp req from:", 14);
+				for (int i = 0; i < 4; i++)
+				{
+					DebugOut(arp->SenderIp[i]);
+					DebugOut(".", 1);
+				}
+				DebugOut("]", 1);
+
+				ArpHeader arpReply;
+				WriteMac(arpReply.Eth.DstMac, arp->Eth.SrcMac);
+				WriteMac(arpReply.Eth.SrcMac, arp->Eth.DstMac);
+				arpReply.Eth.EtherType = arp->Eth.EtherType;
+				arpReply.HwType = arp->HwType;
+				arpReply.ProtoType = arp->ProtoType;
+				arpReply.HwLen = arp->HwLen;
+				arpReply.ProtoLen = arp->ProtoLen;
+				arpReply.Operation = SwapWord(0x0002);
+				WriteMac(arpReply.SenderMac, selfMac);
+				WriteIp(arpReply.SenderIp, selfIp);
+				WriteMac(arpReply.TargetMac, arp->SenderMac);
+				WriteIp(arpReply.TargetIp, arp->SenderIp);
+
+				KeNotify(NfNetwork_SendPacket, (byte*)&arpReply, sizeof(arpReply));
+			}
+		}
+	}
+
+	void ProcessIp(IpHeader* ip)
+	{
+		if (ip->Version != 4)
+			return;
+		if (ip->Ihl != 5)
+			return;
+
+		if (ip->Protocol == 0x01) // ICMP
+		{
+			DebugOut("[icmp]", 6);
+		}
 	}
 
 	void ProcessPacket(byte* data, int len)
 	{
-		if (len < 0x000E)
+		if (len < sizeof(EthernetHeader))
 			return;
 
 		DebugOut("p", 1);
 
-		// Ethernet
-		byte dstMAC[6];
-		byte srcMAC[6];
-		word ethProtoType;
-
-		ReadMac(data + 0x00, dstMAC);
-		ReadMac(data + 0x06, srcMAC);
-		ethProtoType = ReadWordBE(data + 0x0C);
-
-		if (ethProtoType == 0x0806) // ARP
+		EthernetHeader* eth = (EthernetHeader*)data;
+		if (SwapWord(eth->EtherType) == 0x0806) // ARP
 		{
-			if (len < 0x002A)
+			if (len < sizeof(ArpHeader))
 				return;
-
-			word hwType;
-			word arpProtoType;
-			byte hwSize;
-			byte protoSize;
-			word opCode;
-
-			hwType = ReadWordBE(data + 0x0E);
-			arpProtoType = ReadWordBE(data + 0x10);
-			hwSize = data[0x12];
-			protoSize = data[0x13];
-			opCode = ReadWordBE(data + 0x14);
-
-			if (hwType != 0x0001)
-				return;
-			if (arpProtoType != 0x0800)
-				return;
-			if (hwSize != 0x06)
-				return;
-			if (protoSize != 0x04)
-				return;
-
-			if (opCode == 0x0001)
-			{
-				byte senderMAC[6];
-				byte senderIP[4];
-				byte targetMAC[6];
-				byte targetIP[4];
-
-				ReadMac(data + 0x16, senderMAC);
-				ReadIp(data + 0x1C, senderIP);
-				ReadMac(data + 0x20, targetMAC);
-				ReadIp(data + 0x26, targetIP);
-
-				if (!IsMacEqual(srcMAC, senderMAC))
-					return;
-				if (!IsMacEqual(dstMAC, broadcastMAC))
-					if (!IsMacEqual(dstMAC, selfMAC))
-						return;
-				
-				if (IsIpEqual(targetIP, selfIP))
-				{
-					DebugOut("[arp req from:", 14);
-					for (int i = 0; i < 4; i++)
-					{
-						DebugOut(senderIP[i]);
-						DebugOut(".", 1);
-					}
-					DebugOut("]", 1);
-
-					byte arpReply[0x2A];
-					WriteEthernet(arpReply, srcMAC, selfMAC, ethProtoType);
-					WriteWordBE(arpReply + 0x0E, hwType);
-					WriteWordBE(arpReply + 0x10, arpProtoType);
-					arpReply[0x12] = hwSize;
-					arpReply[0x13] = protoSize;
-					WriteWordBE(arpReply + 0x14, 0x0002);
-					WriteMac(arpReply + 0x16, selfMAC);
-					WriteIp(arpReply + 0x1C, selfIP);
-					WriteMac(arpReply + 0x20, senderMAC);
-					WriteIp(arpReply + 0x26, senderIP);
-
-					KeNotify(NfNetwork_SendPacket, arpReply, sizeof(arpReply));
-				}
-			}
+			ArpHeader* arp = (ArpHeader*)data;
+			ProcessArp(arp);
 		}
-		else if (ethProtoType == 0x0800) // IP
+		else if (SwapWord(eth->EtherType) == 0x0800) // IP
 		{
-			if (len < 0x0022)
+			if (len < sizeof(IpHeader))
 				return;
-			byte ipProtoType;
-			ipProtoType = data[0x17];
-
-			if (ipProtoType == 0x01) // ICMP
-			{
-				DebugOut("[icmp]", 6);
-			}
+			IpHeader* ip = (IpHeader*)data;
+			ProcessIp(ip);
 		}
 	}
 };
