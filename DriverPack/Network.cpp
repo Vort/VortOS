@@ -191,6 +191,9 @@ public:
 		if (ip->Ihl != 5)
 			return;
 
+		if (SwapWord(ip->TotalLength) + sizeof(EthernetHeader) > packetLen)
+			return;
+
 		// Fragmentation not supported
 		if (ip->Flags == 0x01)
 			return;
@@ -211,7 +214,7 @@ public:
 			if (packetLen < sizeof(IcmpHeader))
 				return;
 			IcmpHeader* icmp = (IcmpHeader*)ip;
-			ProcessIcmp(icmp, packetLen);
+			ProcessIcmp(icmp);
 		}
 		else if (ip->Protocol == 0x11) // UDP
 		{
@@ -219,7 +222,7 @@ public:
 		}
 	}
 
-	void ProcessIcmp(IcmpHeader* icmp, int packetLen)
+	void ProcessIcmp(IcmpHeader* icmp)
 	{
 		if (icmp->Type != 8)
 			return;
@@ -227,7 +230,7 @@ public:
 			return;
 
 		IcmpEchoHeader* icmpEcho = (IcmpEchoHeader*)icmp;
-		int dataLen = packetLen - sizeof(IcmpEchoHeader);
+		int dataLen = SwapWord(icmp->Ip.TotalLength) + sizeof(EthernetHeader) - sizeof(IcmpEchoHeader);
 
 		if (dataLen % 2 != 0)
 			return; // Not supported
