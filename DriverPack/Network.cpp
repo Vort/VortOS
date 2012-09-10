@@ -45,6 +45,19 @@ struct IpHeader
 	byte SourceIp[4];
 	byte DestinationIp[4];
 };
+struct IcmpHeader
+{
+	IpHeader Ip;
+	byte Type;
+	byte Code;
+};
+struct IcmpEchoHeader
+{
+	IcmpHeader Icmp;
+	word Checksum;
+	word Identifier;
+	word SequenceNumber;
+};
 #pragma pack(pop)
 
 // ----------------------------------------------------------------------------
@@ -171,22 +184,96 @@ public:
 		}
 	}
 
-	void ProcessIp(IpHeader* ip)
+	void ProcessIp(IpHeader* ip, int packetLen)
 	{
 		if (ip->Version != 4)
 			return;
 		if (ip->Ihl != 5)
 			return;
 
+		// Fragmentation not supported
+		if (ip->Flags == 0x01)
+			return;
+		if (ip->FragmentOffsetLo != 0)
+			return;
+		if (ip->FragmentOffsetHi != 0)
+			return;
+
+		if (CalcInternetChecksum(
+			(word*)((byte*)ip + sizeof(EthernetHeader)),
+			(sizeof(IpHeader) - sizeof(EthernetHeader)) / 2) != 0x0000)
+		{
+			return;
+		}
+
 		if (ip->Protocol == 0x01) // ICMP
 		{
-			DebugOut("[icmp]", 6);
+			if (packetLen < sizeof(IcmpHeader))
+				return;
+			IcmpHeader* icmp = (IcmpHeader*)ip;
+			ProcessIcmp(icmp, packetLen);
+		}
+		else if (ip->Protocol == 0x11) // UDP
+		{
+			DebugOut("[udp]", 5);
 		}
 	}
 
-	void ProcessPacket(byte* data, int len)
+	void ProcessIcmp(IcmpHeader* icmp, int packetLen)
 	{
-		if (len < sizeof(EthernetHeader))
+		if (icmp->Type != 8)
+			return;
+		if (icmp->Code != 0)
+			return;
+
+		IcmpEchoHeader* icmpEcho = (IcmpEchoHeader*)icmp;
+		int dataLen = packetLen - sizeof(IcmpEchoHeader);
+
+		if (dataLen % 2 != 0)
+			return; // Not supported
+
+		if (CalcInternetChecksum(
+			(word*)((byte*)icmp + sizeof(IpHeader)),
+			(sizeof(IcmpEchoHeader) - sizeof(IpHeader) + dataLen) / 2) != 0x0000)
+		{
+			return;
+		}
+
+		DebugOut("[ping]", 6);
+
+		const int replyLen = sizeof(IcmpEchoHeader) + dataLen;
+		byte* reply = new byte[replyLen];
+		memcpy(reply, icmp, replyLen);
+		IcmpEchoHeader* icmpEchoReply = (IcmpEchoHeader*)reply;
+		WriteMac(icmpEchoReply->Icmp.Ip.Eth.DstMac, icmp->Ip.Eth.SrcMac);
+		WriteMac(icmpEchoReply->Icmp.Ip.Eth.SrcMac, icmp->Ip.Eth.DstMac);
+		WriteIp(icmpEchoReply->Icmp.Ip.SourceIp, icmp->Ip.DestinationIp);
+		WriteIp(icmpEchoReply->Icmp.Ip.DestinationIp, icmp->Ip.SourceIp);
+		icmpEchoReply->Icmp.Ip.Identification = 0x0000;
+		icmpEchoReply->Icmp.Ip.HeaderChecksum = 0x0000;
+		icmpEchoReply->Icmp.Ip.HeaderChecksum = CalcInternetChecksum(
+			(word*)((byte*)icmpEchoReply + sizeof(EthernetHeader)),
+			(sizeof(IpHeader) - sizeof(EthernetHeader)) / 2);
+		icmpEchoReply->Icmp.Type = 0x00;
+		icmpEchoReply->Checksum = 0x0000;
+		icmpEchoReply->Checksum = CalcInternetChecksum(
+			(word*)((byte*)icmpEchoReply + sizeof(IpHeader)),
+			(sizeof(IcmpEchoHeader) - sizeof(IpHeader) + dataLen) / 2);
+		KeNotify(NfNetwork_SendPacket, (byte*)icmpEchoReply, replyLen);
+		delete reply;
+	}
+
+	word CalcInternetChecksum(word* data, int wordCount)
+	{
+		dword checksum = 0;
+		for (int i = 0; i < wordCount; i++)
+			checksum += data[i];
+		return ~((checksum & 0xFFFF) + (checksum >> 16));
+	}
+
+	void ProcessPacket(byte* data, int packetLen)
+	{
+		if (packetLen < sizeof(EthernetHeader))
 			return;
 
 		DebugOut("p", 1);
@@ -194,17 +281,17 @@ public:
 		EthernetHeader* eth = (EthernetHeader*)data;
 		if (SwapWord(eth->EtherType) == 0x0806) // ARP
 		{
-			if (len < sizeof(ArpHeader))
+			if (packetLen < sizeof(ArpHeader))
 				return;
 			ArpHeader* arp = (ArpHeader*)data;
 			ProcessArp(arp);
 		}
 		else if (SwapWord(eth->EtherType) == 0x0800) // IP
 		{
-			if (len < sizeof(IpHeader))
+			if (packetLen < sizeof(IpHeader))
 				return;
 			IpHeader* ip = (IpHeader*)data;
-			ProcessIp(ip);
+			ProcessIp(ip, packetLen);
 		}
 	}
 };
