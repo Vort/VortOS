@@ -202,9 +202,9 @@ public:
 		if (ip->FragmentOffsetHi != 0)
 			return;
 
-		if (CalcInternetChecksum(
-			(word*)((byte*)ip + sizeof(EthernetHeader)),
-			(sizeof(IpHeader) - sizeof(EthernetHeader)) / 2) != 0x0000)
+		if (CalcInternetChecksum(0xFFFF,
+			(byte*)ip + sizeof(EthernetHeader),
+			sizeof(IpHeader) - sizeof(EthernetHeader)) != 0x0000)
 		{
 			return;
 		}
@@ -232,12 +232,9 @@ public:
 		IcmpEchoHeader* icmpEcho = (IcmpEchoHeader*)icmp;
 		int dataLen = SwapWord(icmp->Ip.TotalLength) + sizeof(EthernetHeader) - sizeof(IcmpEchoHeader);
 
-		if (dataLen % 2 != 0)
-			return; // Not supported
-
-		if (CalcInternetChecksum(
-			(word*)((byte*)icmp + sizeof(IpHeader)),
-			(sizeof(IcmpEchoHeader) - sizeof(IpHeader) + dataLen) / 2) != 0x0000)
+		if (CalcInternetChecksum(0xFFFF,
+			(byte*)icmp + sizeof(IpHeader),
+			sizeof(IcmpEchoHeader) - sizeof(IpHeader) + dataLen) != 0x0000)
 		{
 			return;
 		}
@@ -254,23 +251,26 @@ public:
 		WriteIp(icmpEchoReply->Icmp.Ip.DestinationIp, icmp->Ip.SourceIp);
 		icmpEchoReply->Icmp.Ip.Identification = 0x0000;
 		icmpEchoReply->Icmp.Ip.HeaderChecksum = 0x0000;
-		icmpEchoReply->Icmp.Ip.HeaderChecksum = CalcInternetChecksum(
-			(word*)((byte*)icmpEchoReply + sizeof(EthernetHeader)),
-			(sizeof(IpHeader) - sizeof(EthernetHeader)) / 2);
+		icmpEchoReply->Icmp.Ip.HeaderChecksum = CalcInternetChecksum(0xFFFF,
+			(byte*)icmpEchoReply + sizeof(EthernetHeader),
+			sizeof(IpHeader) - sizeof(EthernetHeader));
 		icmpEchoReply->Icmp.Type = 0x00;
 		icmpEchoReply->Checksum = 0x0000;
-		icmpEchoReply->Checksum = CalcInternetChecksum(
-			(word*)((byte*)icmpEchoReply + sizeof(IpHeader)),
-			(sizeof(IcmpEchoHeader) - sizeof(IpHeader) + dataLen) / 2);
+		icmpEchoReply->Checksum = CalcInternetChecksum(0xFFFF,
+			(byte*)icmpEchoReply + sizeof(IpHeader),
+			sizeof(IcmpEchoHeader) - sizeof(IpHeader) + dataLen);
 		KeNotify(NfNetwork_SendPacket, (byte*)icmpEchoReply, replyLen);
 		delete reply;
 	}
 
-	word CalcInternetChecksum(word* data, int wordCount)
+	word CalcInternetChecksum(word startChecksum, byte* data, int byteCount)
 	{
-		dword checksum = 0;
+		word wordCount = byteCount / 2;
+		dword checksum = ~startChecksum & 0xFFFF;
 		for (int i = 0; i < wordCount; i++)
-			checksum += data[i];
+			checksum += ((word*)data)[i];
+		if (byteCount % 2 == 1)
+			checksum += data[byteCount - 1];
 		return ~((checksum & 0xFFFF) + (checksum >> 16));
 	}
 
