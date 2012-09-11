@@ -101,6 +101,8 @@ class Network
 {
 private:
 	dword dhcpXId;
+	byte dhcpSrvIp[4];
+
 	byte broadcastIp[4];
 	byte broadcastMac[6];
 	byte zeroMac[6];
@@ -120,6 +122,7 @@ public:
 		memset(zeroMac, 0x00, 6);
 		memset(zeroIp, 0x00, 4);
 		memset(selfIp, 0x00, 4);
+		memset(dhcpSrvIp, 0x00, 4);
 
 		KeRequestCall(ClNetwork_GetSelfMACAddress, null, 0, selfMac, 6);
 
@@ -199,11 +202,7 @@ public:
 			if (IsIpEqual(arp->TargetIp, selfIp))
 			{
 				DebugOut("[arp req from:", 14);
-				for (int i = 0; i < 4; i++)
-				{
-					DebugOut(arp->SenderIp[i]);
-					DebugOut(".", 1);
-				}
+				DebugOutIp(arp->SenderIp);
 				DebugOut("]", 1);
 
 				ArpHeader arpReply;
@@ -361,10 +360,17 @@ public:
 
 		if (msgType == 0x02)
 		{
+			if (!IsIpEqual(dhcpSrvIp, zeroIp))
+				return;
+
+			WriteIp(dhcpSrvIp, serverIp);
 			SendDhcpRequest(dhcp->YIAddr, serverIp);
 		}
 		else if (msgType == 0x05)
 		{
+			if (!IsIpEqual(serverIp, dhcpSrvIp))
+				return;
+
 			WriteIp(selfIp, dhcp->YIAddr);
 
 			ArpHeader arp;
@@ -379,13 +385,18 @@ public:
 			KeNotify(NfNetwork_SendPacket, (byte*)&arp, sizeof(ArpHeader));
 
 			DebugOut("[dhcp_ip:", 9);
-			for (int i = 0; i < 4; i++)
-			{
-				if (i != 0)
-					DebugOut(".", 1);
-				DebugOutDec(selfIp[i]);
-			}
+			DebugOutIp(selfIp);
 			DebugOut("]", 1);
+		}
+	}
+
+	void DebugOutIp(byte* ip)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			if (i != 0)
+				DebugOut(".", 1);
+			DebugOutDec(ip[i]);
 		}
 	}
 
@@ -403,6 +414,8 @@ public:
 		if (icmp->Type != 8)
 			return;
 		if (icmp->Code != 0)
+			return;
+		if (!IsIpEqual(icmp->Ip.DestinationIp, selfIp))
 			return;
 
 		IcmpEchoHeader* icmpEcho = (IcmpEchoHeader*)icmp;
