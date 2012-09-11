@@ -16,7 +16,8 @@
 #define SmDesktop_Ready 0x2C9C9C65
 #define SmFont_Ready 0x1E06B3B1
 #define SmPCI_Ready 0x7CB5C2B7
-#define SmNetwork_Ready 0x40EBF855
+#define SmNetwork_Waiting 0x40EBF855
+#define SmNetwork_Ready 0x32817017
 
 #define SmCursor_Terminated 0xF3C55B2E
 #define SmDesktop_Terminated 0x5AAB30D0
@@ -42,6 +43,7 @@
 #define Sm_Lock_FileSys   0x33F8579D
 #define Sm_Lock_Cache     0x7A8A2C05
 #define Sm_Lock_Partition 0x86B16F37
+#define Sm_Lock_Network   0x5BDCC256
 #define Sm_Lock_Floppy    0x073CD70D
 #define Sm_Lock_i8042     0x5FC779E1
 #define Sm_Lock_NE2000    0x16B7AB3C

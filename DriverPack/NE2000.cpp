@@ -42,7 +42,7 @@ public:
 		// fifo = 2, no loopback, LE byte order, word DMA
 		KeOutPortByte(baseAddress + 0xE, 0xC9); // DCR
 		// unmask PTX and PRX
-		KeOutPortByte(baseAddress + 0xF, 0x3); // IMR
+		KeOutPortByte(baseAddress + 0xF, 0x3);  // IMR
 
 		// Retrieve MAC address
 		KeOutPortByte(baseAddress + 0x0, 0x0A); // CR
@@ -72,8 +72,8 @@ public:
 		// page = 0, no DMA, start
 		KeOutPortByte(baseAddress + 0x0, 0x22); // CR
 
+		KeWaitForSymbol(SmNetwork_Waiting);
 		KeSetSymbol(SmNetwork_Ready);
-
 
 		CCallRequest<4> CR;
 		CNotification<2048> N;

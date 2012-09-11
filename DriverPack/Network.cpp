@@ -113,10 +113,6 @@ private:
 public:
 	Network()
 	{
-		KeWaitForSymbol(SmNetwork_Ready);
-
-		KeEnableNotification(NfNetwork_RecvdPacket);
-
 		memset(broadcastIp, 0xFF, 4);
 		memset(broadcastMac, 0xFF, 6);
 		memset(zeroMac, 0x00, 6);
@@ -124,6 +120,10 @@ public:
 		memset(selfIp, 0x00, 4);
 		memset(dhcpSrvIp, 0x00, 4);
 
+		KeEnableNotification(NfNetwork_RecvdPacket);
+
+		KeSetSymbol(SmNetwork_Waiting);
+		KeWaitForSymbol(SmNetwork_Ready);
 		KeRequestCall(ClNetwork_GetSelfMACAddress, null, 0, selfMac, 6);
 
 		SendDhcpDiscover();
@@ -570,6 +570,8 @@ public:
 // ----------------------------------------------------------------------------
 void Entry()
 {
+	if (!KeSetSymbol(Sm_Lock_Network))
+		return;
 	Network network;
 }
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
