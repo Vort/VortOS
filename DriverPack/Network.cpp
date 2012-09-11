@@ -74,13 +74,36 @@ struct UdpHeader
 	word Length;
 	word Checksum;
 };
+struct DhcpHeader
+{
+	UdpHeader Udp;
+	byte Op;
+	byte HType;
+	byte HLen;
+	byte Hops;
+	dword XId;
+	word Secs;
+	word Flags;
+	byte CIAddr[4];
+	byte YIAddr[4];
+	byte SIAddr[4];
+	byte GIAddr[4];
+	byte CHAddr[6];
+	byte CHAPadding[10];
+	byte SName[64];
+	byte File[128];
+	dword Magic;
+};
 #pragma pack(pop)
 
 // ----------------------------------------------------------------------------
 class Network
 {
 private:
+	dword dhcpXId;
+	byte broadcastIp[4];
 	byte broadcastMac[6];
+	byte zeroIp[4];
 	byte selfMac[6];
 	byte selfIp[4];
 
@@ -91,7 +114,9 @@ public:
 
 		KeEnableNotification(NfNetwork_RecvdPacket);
 
+		memset(broadcastIp, 0xFF, 4);
 		memset(broadcastMac, 0xFF, 6);
+		memset(zeroIp, 0x00, 4);
 
 		selfIp[0] = 192;
 		selfIp[1] = 168;
@@ -99,6 +124,8 @@ public:
 		selfIp[3] = 100;
 
 		KeRequestCall(ClNetwork_GetSelfMACAddress, null, 0, selfMac, 6);
+
+		SendDhcpDiscover();
 
 		CNotification<2048> N;
 		for (;;)
@@ -241,6 +268,19 @@ public:
 		}
 	}
 
+	word CalcUdpChecksum(UdpHeader* udp)
+	{
+		UdpPseudoHeader ph;
+		WriteIp(ph.SourceIp, udp->Ip.SourceIp);
+		WriteIp(ph.DestinationIp, udp->Ip.DestinationIp);
+		ph.Zero = 0x00;
+		ph.Protocol = 0x11;
+		ph.UdpLength = udp->Length;
+		return CalcInternetChecksum(CalcInternetChecksum(0xFFFF,
+			(byte*)&ph, sizeof(UdpPseudoHeader)),
+			(byte*)udp + sizeof(IpHeader), SwapWord(udp->Length));
+	}
+
 	void ProcessUdp(UdpHeader* udp)
 	{
 		word udpLength = SwapWord(udp->Ip.TotalLength) +
@@ -249,19 +289,9 @@ public:
 		if (udpLength != SwapWord(udp->Length))
 			return;
 
-		UdpPseudoHeader ph;
-		WriteIp(ph.SourceIp, udp->Ip.SourceIp);
-		WriteIp(ph.DestinationIp, udp->Ip.DestinationIp);
-		ph.Zero = 0x00;
-		ph.Protocol = 0x11;
-		ph.UdpLength = SwapWord(udpLength);
-
 		if (udp->Checksum != 0x0000)
 		{
-			word phChecksum = CalcInternetChecksum(0xFFFF, (byte*)&ph, sizeof(UdpPseudoHeader));
-			word totalChecksum = CalcInternetChecksum(phChecksum,
-				(byte*)udp + sizeof(IpHeader), udpLength);
-			if (totalChecksum != 0x0000)
+			if (CalcUdpChecksum(udp) != 0x0000)
 				return;
 		}
 
@@ -350,6 +380,75 @@ public:
 			IpHeader* ip = (IpHeader*)data;
 			ProcessIp(ip, packetLen);
 		}
+	}
+
+	dword GetRandomDword()
+	{
+		dword val;
+		__asm
+		{
+			rdtsc
+			xor eax, edx
+			mov val, eax
+		}
+		return val;
+	}
+
+	void FillDhcpHeader(DhcpHeader* dhcp, int packetLen)
+	{
+		// Ethernet
+		WriteMac(dhcp->Udp.Ip.Eth.DstMac, broadcastMac);
+		WriteMac(dhcp->Udp.Ip.Eth.SrcMac, selfMac);
+		dhcp->Udp.Ip.Eth.EtherType = SwapWord(0x0800);
+		// IP
+		dhcp->Udp.Ip.Version = 4;
+		dhcp->Udp.Ip.Ihl = 5;
+		dhcp->Udp.Ip.Dscp = 0;
+		dhcp->Udp.Ip.Ecn = 0;
+		dhcp->Udp.Ip.TotalLength = SwapWord(packetLen - sizeof(EthernetHeader));
+		dhcp->Udp.Ip.Identification = 0;
+		dhcp->Udp.Ip.FragmentOffsetHi = 0;
+		dhcp->Udp.Ip.FragmentOffsetLo = 0;
+		dhcp->Udp.Ip.Flags = 0;
+		dhcp->Udp.Ip.TimeToLive = 0x80;
+		dhcp->Udp.Ip.Protocol = 0x11;
+		dhcp->Udp.Ip.HeaderChecksum = 0x0000;
+		WriteIp(dhcp->Udp.Ip.SourceIp, zeroIp);
+		WriteIp(dhcp->Udp.Ip.DestinationIp, broadcastIp);
+		dhcp->Udp.Ip.HeaderChecksum = CalcInternetChecksum(0xFFFF,
+			(byte*)dhcp + sizeof(EthernetHeader),
+			sizeof(IpHeader) - sizeof(EthernetHeader));
+		// UDP
+		dhcp->Udp.SourcePort = SwapWord(68);
+		dhcp->Udp.DestinationPort = SwapWord(67);
+		dhcp->Udp.Length = SwapWord(packetLen - sizeof(IpHeader));
+		dhcp->Udp.Checksum = 0x0000;
+		// DHCP
+		dhcp->Op = 0x01;
+		dhcp->HType = 0x01;
+		dhcp->HLen = 0x06;
+		dhcp->Hops = 0x00;
+		dhcp->XId = dhcpXId;
+		dhcp->Secs = 0x0000;
+		dhcp->Flags = 0x0000;
+		WriteMac(dhcp->CHAddr, selfMac);
+		dhcp->Magic = 0x63538263;
+	}
+
+	void SendDhcpDiscover()
+	{
+		dhcpXId = GetRandomDword();
+
+		const int packetLen = sizeof(DhcpHeader) + 4;
+		byte packet[packetLen] = {0};
+		DhcpHeader* dhcp = (DhcpHeader*)packet;
+		FillDhcpHeader(dhcp, packetLen);
+		packet[sizeof(DhcpHeader) + 0] = 53;
+		packet[sizeof(DhcpHeader) + 1] = 1;
+		packet[sizeof(DhcpHeader) + 2] = 1; // Discover
+		packet[sizeof(DhcpHeader) + 3] = 255;
+		dhcp->Udp.Checksum = CalcUdpChecksum((UdpHeader*)dhcp);
+		KeNotify(NfNetwork_SendPacket, packet, packetLen);
 	}
 };
 
