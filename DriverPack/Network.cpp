@@ -103,6 +103,7 @@ private:
 	dword dhcpXId;
 	byte broadcastIp[4];
 	byte broadcastMac[6];
+	byte zeroMac[6];
 	byte zeroIp[4];
 	byte selfMac[6];
 	byte selfIp[4];
@@ -116,12 +117,9 @@ public:
 
 		memset(broadcastIp, 0xFF, 4);
 		memset(broadcastMac, 0xFF, 6);
+		memset(zeroMac, 0x00, 6);
 		memset(zeroIp, 0x00, 4);
-
-		selfIp[0] = 192;
-		selfIp[1] = 168;
-		selfIp[2] = 150;
-		selfIp[3] = 100;
+		memset(selfIp, 0x00, 4);
 
 		KeRequestCall(ClNetwork_GetSelfMACAddress, null, 0, selfMac, 6);
 
@@ -298,12 +296,88 @@ public:
 		word dataLength = SwapWord(udp->Ip.TotalLength) +
 			sizeof(EthernetHeader) - sizeof(UdpHeader);
 
+		if ((SwapWord(udp->SourcePort) == 67) &&
+			(SwapWord(udp->DestinationPort) == 68))
+		{
+			if (dataLength < (sizeof(DhcpHeader) - sizeof(UdpHeader)))
+				return;
+			DhcpHeader* dhcp = (DhcpHeader*)udp;
+			ProcessDhcp(dhcp);
+		}
+
 		if (SwapWord(udp->DestinationPort) == 12321)
 		{
 			DebugOut("[udp:", 5);
 			DebugOut((char*)udp + sizeof(UdpHeader), dataLength);
 			DebugOut("]", 5);
 		}
+	}
+
+	void ProcessDhcp(DhcpHeader* dhcp)
+	{
+		if (dhcp->Op != 0x02)
+			return;
+		if (dhcp->XId != dhcpXId)
+			return;
+		if (!IsMacEqual(dhcp->CHAddr, selfMac))
+			return;
+		if (dhcp->Magic != 0x63538263)
+			return;
+
+		byte msgType = 0;
+		byte serverIp[4] = {0};
+		byte* optionsPtr = (byte*)dhcp + sizeof(DhcpHeader);
+		for (;;)
+		{
+			byte code = *optionsPtr++;
+			if (code == 0x00)
+			{
+				continue;
+			}
+			else if (code == 0xFF)
+			{
+				break;
+			}
+			else
+			{
+				byte len = *optionsPtr++;
+				if (code == 53)
+				{
+					msgType = *optionsPtr;
+				}
+				else if (code == 54)
+				{
+					WriteIp(serverIp, optionsPtr);
+				}
+				optionsPtr += len;
+			}
+		}
+
+		if (msgType == 0x02)
+		{
+			SendDhcpRequest(dhcp->YIAddr, serverIp);
+		}
+		else if (msgType == 0x05)
+		{
+			WriteIp(selfIp, dhcp->YIAddr);
+
+			ArpHeader arp;
+			WriteMac(arp.Eth.DstMac, broadcastMac);
+			WriteMac(arp.Eth.SrcMac, selfMac);
+			arp.Eth.EtherType = SwapWord(0x0806);
+			arp.HwType = SwapWord(0x0001);
+			arp.ProtoType = SwapWord(0x0800);
+			arp.HwLen = 6;
+			arp.ProtoLen = 4;
+			arp.Operation = SwapWord(0x0001);
+			WriteMac(arp.SenderMac, selfMac);
+			WriteIp(arp.SenderIp, selfIp);
+			WriteMac(arp.TargetMac, zeroMac);
+			WriteIp(arp.TargetIp, selfIp);
+			KeNotify(NfNetwork_SendPacket, (byte*)&arp, sizeof(ArpHeader));
+		}
+
+		DebugOut("[dhcp]", 6);
 	}
 
 	void ProcessIcmp(IcmpHeader* icmp)
@@ -447,6 +521,26 @@ public:
 		packet[sizeof(DhcpHeader) + 1] = 1;
 		packet[sizeof(DhcpHeader) + 2] = 1; // Discover
 		packet[sizeof(DhcpHeader) + 3] = 255;
+		dhcp->Udp.Checksum = CalcUdpChecksum((UdpHeader*)dhcp);
+		KeNotify(NfNetwork_SendPacket, packet, packetLen);
+	}
+
+	void SendDhcpRequest(byte* clientIp, byte* serverIp)
+	{
+		const int packetLen = sizeof(DhcpHeader) + 16;
+		byte packet[packetLen] = {0};
+		DhcpHeader* dhcp = (DhcpHeader*)packet;
+		FillDhcpHeader(dhcp, packetLen);
+		packet[sizeof(DhcpHeader) + 0] = 53;
+		packet[sizeof(DhcpHeader) + 1] = 1;
+		packet[sizeof(DhcpHeader) + 2] = 3; // Discover
+		packet[sizeof(DhcpHeader) + 3] = 50;
+		packet[sizeof(DhcpHeader) + 4] = 4;
+		WriteIp(packet + sizeof(DhcpHeader) + 5, clientIp);
+		packet[sizeof(DhcpHeader) + 9] = 54;
+		packet[sizeof(DhcpHeader) + 10] = 4;
+		WriteIp(packet + sizeof(DhcpHeader) + 11, serverIp);
+		packet[sizeof(DhcpHeader) + 15] = 255;
 		dhcp->Udp.Checksum = CalcUdpChecksum((UdpHeader*)dhcp);
 		KeNotify(NfNetwork_SendPacket, packet, packetLen);
 	}
