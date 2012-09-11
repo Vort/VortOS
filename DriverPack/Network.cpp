@@ -58,6 +58,22 @@ struct IcmpEchoHeader
 	word Identifier;
 	word SequenceNumber;
 };
+struct UdpPseudoHeader
+{
+	byte SourceIp[4];
+	byte DestinationIp[4];
+	byte Zero;
+	byte Protocol;
+	word UdpLength;
+};
+struct UdpHeader
+{
+	IpHeader Ip;
+	word SourcePort;
+	word DestinationPort;
+	word Length;
+	word Checksum;
+};
 #pragma pack(pop)
 
 // ----------------------------------------------------------------------------
@@ -218,7 +234,45 @@ public:
 		}
 		else if (ip->Protocol == 0x11) // UDP
 		{
-			DebugOut("[udp]", 5);
+			if (packetLen < sizeof(UdpHeader))
+				return;
+			UdpHeader* udp = (UdpHeader*)ip;
+			ProcessUdp(udp);
+		}
+	}
+
+	void ProcessUdp(UdpHeader* udp)
+	{
+		word udpLength = SwapWord(udp->Ip.TotalLength) +
+			sizeof(EthernetHeader) - sizeof(IpHeader);
+
+		if (udpLength != SwapWord(udp->Length))
+			return;
+
+		UdpPseudoHeader ph;
+		WriteIp(ph.SourceIp, udp->Ip.SourceIp);
+		WriteIp(ph.DestinationIp, udp->Ip.DestinationIp);
+		ph.Zero = 0x00;
+		ph.Protocol = 0x11;
+		ph.UdpLength = SwapWord(udpLength);
+
+		if (udp->Checksum != 0x0000)
+		{
+			word phChecksum = CalcInternetChecksum(0xFFFF, (byte*)&ph, sizeof(UdpPseudoHeader));
+			word totalChecksum = CalcInternetChecksum(phChecksum,
+				(byte*)udp + sizeof(IpHeader), udpLength);
+			if (totalChecksum != 0x0000)
+				return;
+		}
+
+		word dataLength = SwapWord(udp->Ip.TotalLength) +
+			sizeof(EthernetHeader) - sizeof(UdpHeader);
+
+		if (SwapWord(udp->DestinationPort) == 12321)
+		{
+			DebugOut("[udp:", 5);
+			DebugOut((char*)udp + sizeof(UdpHeader), dataLength);
+			DebugOut("]", 5);
 		}
 	}
 
