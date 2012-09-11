@@ -7,6 +7,7 @@
 #include "UserCalls.h"
 #include "VitrualKey.h"
 #include "BitOp.h"
+#include "NumericConverter.h"
 
 // ----------------------------------------------------------------------------
 extern "C" size_t strlen(const char *str);
@@ -187,6 +188,14 @@ void DebugOut(byte Byte)
 	char Buf[2];
 	ByteToString(Byte, Buf);
 	KeNotify(Nf_DebugOut, PB(Buf), 2);
+}
+
+// ----------------------------------------------------------------------------
+void DebugOutDec(dword val)
+{
+	char buf[12];
+	dword len = CNumericConverter().DwordToString(val, buf);
+	KeNotify(Nf_DebugOut, (byte*)buf, len);
 }
 
 // ----------------------------------------------------------------------------

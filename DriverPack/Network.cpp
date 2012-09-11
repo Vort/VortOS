@@ -208,13 +208,9 @@ public:
 
 				ArpHeader arpReply;
 				WriteMac(arpReply.Eth.DstMac, arp->Eth.SrcMac);
-				WriteMac(arpReply.Eth.SrcMac, arp->Eth.DstMac);
-				arpReply.Eth.EtherType = arp->Eth.EtherType;
-				arpReply.HwType = arp->HwType;
-				arpReply.ProtoType = arp->ProtoType;
-				arpReply.HwLen = arp->HwLen;
-				arpReply.ProtoLen = arp->ProtoLen;
+				WriteMac(arpReply.Eth.SrcMac, selfMac);
 				arpReply.Operation = SwapWord(0x0002);
+				FillArpHeader(&arpReply);
 				WriteMac(arpReply.SenderMac, selfMac);
 				WriteIp(arpReply.SenderIp, selfIp);
 				WriteMac(arpReply.TargetMac, arp->SenderMac);
@@ -243,12 +239,8 @@ public:
 		if (ip->FragmentOffsetHi != 0)
 			return;
 
-		if (CalcInternetChecksum(0xFFFF,
-			(byte*)ip + sizeof(EthernetHeader),
-			sizeof(IpHeader) - sizeof(EthernetHeader)) != 0x0000)
-		{
+		if (CalcIpChecksum(ip) != 0x0000)
 			return;
-		}
 
 		if (ip->Protocol == 0x01) // ICMP
 		{
@@ -264,6 +256,20 @@ public:
 			UdpHeader* udp = (UdpHeader*)ip;
 			ProcessUdp(udp);
 		}
+	}
+
+	word CalcIcmpEchoChecksum(IcmpEchoHeader* icmpEcho, int dataLen)
+	{
+		return CalcInternetChecksum(0xFFFF,
+			(byte*)icmpEcho + sizeof(IpHeader),
+			sizeof(IcmpEchoHeader) - sizeof(IpHeader) + dataLen);
+	}
+
+	word CalcIpChecksum(IpHeader* ip)
+	{
+		return CalcInternetChecksum(0xFFFF,
+			(byte*)ip + sizeof(EthernetHeader),
+			sizeof(IpHeader) - sizeof(EthernetHeader));
 	}
 
 	word CalcUdpChecksum(UdpHeader* udp)
@@ -364,20 +370,32 @@ public:
 			ArpHeader arp;
 			WriteMac(arp.Eth.DstMac, broadcastMac);
 			WriteMac(arp.Eth.SrcMac, selfMac);
-			arp.Eth.EtherType = SwapWord(0x0806);
-			arp.HwType = SwapWord(0x0001);
-			arp.ProtoType = SwapWord(0x0800);
-			arp.HwLen = 6;
-			arp.ProtoLen = 4;
 			arp.Operation = SwapWord(0x0001);
+			FillArpHeader(&arp);
 			WriteMac(arp.SenderMac, selfMac);
 			WriteIp(arp.SenderIp, selfIp);
 			WriteMac(arp.TargetMac, zeroMac);
 			WriteIp(arp.TargetIp, selfIp);
 			KeNotify(NfNetwork_SendPacket, (byte*)&arp, sizeof(ArpHeader));
-		}
 
-		DebugOut("[dhcp]", 6);
+			DebugOut("[dhcp_ip:", 9);
+			for (int i = 0; i < 4; i++)
+			{
+				if (i != 0)
+					DebugOut(".", 1);
+				DebugOutDec(selfIp[i]);
+			}
+			DebugOut("]", 1);
+		}
+	}
+
+	void FillArpHeader(ArpHeader* arp)
+	{
+		arp->Eth.EtherType = SwapWord(0x0806);
+		arp->HwType = SwapWord(0x0001);
+		arp->ProtoType = SwapWord(0x0800);
+		arp->HwLen = 6;
+		arp->ProtoLen = 4;
 	}
 
 	void ProcessIcmp(IcmpHeader* icmp)
@@ -390,12 +408,8 @@ public:
 		IcmpEchoHeader* icmpEcho = (IcmpEchoHeader*)icmp;
 		int dataLen = SwapWord(icmp->Ip.TotalLength) + sizeof(EthernetHeader) - sizeof(IcmpEchoHeader);
 
-		if (CalcInternetChecksum(0xFFFF,
-			(byte*)icmp + sizeof(IpHeader),
-			sizeof(IcmpEchoHeader) - sizeof(IpHeader) + dataLen) != 0x0000)
-		{
+		if (CalcIcmpEchoChecksum(icmpEcho, dataLen) != 0x0000)
 			return;
-		}
 
 		DebugOut("[ping]", 6);
 
@@ -409,14 +423,10 @@ public:
 		WriteIp(icmpEchoReply->Icmp.Ip.DestinationIp, icmp->Ip.SourceIp);
 		icmpEchoReply->Icmp.Ip.Identification = 0x0000;
 		icmpEchoReply->Icmp.Ip.HeaderChecksum = 0x0000;
-		icmpEchoReply->Icmp.Ip.HeaderChecksum = CalcInternetChecksum(0xFFFF,
-			(byte*)icmpEchoReply + sizeof(EthernetHeader),
-			sizeof(IpHeader) - sizeof(EthernetHeader));
+		icmpEchoReply->Icmp.Ip.HeaderChecksum = CalcIpChecksum((IpHeader*)icmpEchoReply);
 		icmpEchoReply->Icmp.Type = 0x00;
 		icmpEchoReply->Checksum = 0x0000;
-		icmpEchoReply->Checksum = CalcInternetChecksum(0xFFFF,
-			(byte*)icmpEchoReply + sizeof(IpHeader),
-			sizeof(IcmpEchoHeader) - sizeof(IpHeader) + dataLen);
+		icmpEchoReply->Checksum = CalcIcmpEchoChecksum(icmpEchoReply, dataLen);
 		KeNotify(NfNetwork_SendPacket, (byte*)icmpEchoReply, replyLen);
 		delete reply;
 	}
@@ -489,9 +499,7 @@ public:
 		dhcp->Udp.Ip.HeaderChecksum = 0x0000;
 		WriteIp(dhcp->Udp.Ip.SourceIp, zeroIp);
 		WriteIp(dhcp->Udp.Ip.DestinationIp, broadcastIp);
-		dhcp->Udp.Ip.HeaderChecksum = CalcInternetChecksum(0xFFFF,
-			(byte*)dhcp + sizeof(EthernetHeader),
-			sizeof(IpHeader) - sizeof(EthernetHeader));
+		dhcp->Udp.Ip.HeaderChecksum = CalcIpChecksum((IpHeader*)dhcp);
 		// UDP
 		dhcp->Udp.SourcePort = SwapWord(68);
 		dhcp->Udp.DestinationPort = SwapWord(67);
