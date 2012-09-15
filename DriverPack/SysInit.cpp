@@ -64,6 +64,7 @@ public:
 		CreateProcess("PCI.bin");
 		CreateProcess("Network.bin");
 		CreateProcess("NE2000.bin");
+		CreateProcess("Am79C970.bin");
 
 		char* videoDrvList[] =
 		{

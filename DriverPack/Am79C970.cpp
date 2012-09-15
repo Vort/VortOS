@@ -93,8 +93,8 @@ private:
 	InitBlock* initBlock;
 	ReceiveDescriptor* receiveRing;
 	TransmitDescriptor* transmitRing;
-	byte* recvBuffers[4];
-	byte* sendBuffers[2];
+	byte* recvBuffers[16];
+	byte* sendBuffers[4];
 
 	dword nextReceiveIndex;
 	dword nextTransmitIndex;
@@ -142,24 +142,30 @@ public:
 		// BREADE = 1
 		WriteBCR(18, ReadBCR(18) | (1 << 6));
 
-		for (int i = 0; i < 4; i++)
-			recvBuffers[i] = new byte[0x1000];
+		for (int i = 0; i < 8; i++)
+		{
+			recvBuffers[i * 2 + 0] = new byte[0x1000];
+			recvBuffers[i * 2 + 1] = recvBuffers[i * 2 + 0] + 0x800;
+		}
 		for (int i = 0; i < 2; i++)
-			sendBuffers[i] = new byte[0x1000];
+		{
+			sendBuffers[i * 2 + 0] = new byte[0x1000];
+			sendBuffers[i * 2 + 1] = sendBuffers[i * 2 + 0] + 0x800;
+		}
 
 		receiveRing = (ReceiveDescriptor*)new byte[0x1000];
 		transmitRing = (TransmitDescriptor*)new byte[0x1000];
-		memset(receiveRing, 0x00, sizeof(ReceiveDescriptor) * 4);
-		memset(transmitRing, 0x00, sizeof(TransmitDescriptor) * 2);
+		memset(receiveRing, 0x00, sizeof(ReceiveDescriptor) * 16);
+		memset(transmitRing, 0x00, sizeof(TransmitDescriptor) * 4);
 
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 16; i++)
 		{
-			receiveRing[i].BCNT = -1500;
+			receiveRing[i].BCNT = -2048;
 			receiveRing[i].Ones = ~0;
 			receiveRing[i].RBADR = KeVirtToPhys(recvBuffers[i]);
 			receiveRing[i].OWN = 1;
 		}
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 4; i++)
 		{
 			transmitRing[i].Ones = ~0;
 			transmitRing[i].TBADR = KeVirtToPhys(sendBuffers[i]);
@@ -173,8 +179,8 @@ public:
 		WriteCSR(2, initBlockPA >> 16);
 
 		initBlock->Mode = 0x0000; // CSR15
-		initBlock->RLen = 2; // 4 receive descriptors
-		initBlock->TLen = 1; // 2 transmit descriptors
+		initBlock->RLen = 4; // 16 receive descriptors
+		initBlock->TLen = 2; // 4 transmit descriptors
 		memcpy(initBlock->PAdr, macAddr, 6);
 		initBlock->RDRA = KeVirtToPhys((byte*)receiveRing);
 		initBlock->TDRA = KeVirtToPhys((byte*)transmitRing);
@@ -201,6 +207,9 @@ public:
 				}
 				else if (N.GetID() == NfNetwork_SendPacket)
 				{
+					if (N.GetSize() > 2048)
+						continue;
+
 					if (transmitRing[nextTransmitIndex].OWN == 0)
 					{
 						transmitRing[nextTransmitIndex].BCNT = -N.GetSize();
@@ -208,7 +217,7 @@ public:
 						transmitRing[nextTransmitIndex].STP = 1;
 						transmitRing[nextTransmitIndex].ENP = 1;
 						transmitRing[nextTransmitIndex].OWN = 1;
-						nextTransmitIndex = (nextTransmitIndex + 1) % 2;
+						nextTransmitIndex = (nextTransmitIndex + 1) % 4;
 					}
 					else
 					{
@@ -244,7 +253,10 @@ public:
 		{
 			// MISS
 			if ((ReadCSR(0) & (1 << 12)) != 0)
+			{
+				DebugOut("[rcvmiss]", 9);
 				WriteCSR(0, (ReadCSR(0) & 0x80F7) | (1 << 12));
+			}
 
 			// RINT
 			if ((ReadCSR(0) & (1 << 10)) != 0)
@@ -257,7 +269,7 @@ public:
 							recvBuffers[nextReceiveIndex],
 							receiveRing[nextReceiveIndex].MCNT);
 						receiveRing[nextReceiveIndex].OWN = 1;
-						nextReceiveIndex = (nextReceiveIndex + 1) % 4;
+						nextReceiveIndex = (nextReceiveIndex + 1) % 16;
 					}
 					else
 					{
@@ -269,7 +281,9 @@ public:
 
 			// TINT
 			if ((ReadCSR(0) & (1 << 9)) != 0)
+			{
 				WriteCSR(0, (ReadCSR(0) & 0x80F7) | (1 << 9));
+			}
 		}
 		
 		KeEndOfInterrupt(9);

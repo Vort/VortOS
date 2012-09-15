@@ -94,7 +94,13 @@ public:
 				else if (N.GetID() == NfNetwork_SendPacket)
 				{
 					if (!sending)
+					{
 						SendPacket(N.GetBuf(), N.GetSize());
+					}
+					else
+					{
+						DebugOut("[tskip]", 7);
+					}
 				}
 			}
 			for (dword z = 0; z < CallCount; z++)
