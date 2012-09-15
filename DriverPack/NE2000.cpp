@@ -179,7 +179,7 @@ public:
 		if (!GetPCIDeviceByID(0x10EC, 0x8029, bus, device, function))
 			return false;
 
-		baseAddress = GetPCIDeviceReg(bus, device, function, 0x10) & ~0x3;
+		baseAddress = ReadPCIConfDword(bus, device, function, 0x10) & ~0x3;
 		return true;
 	}
 };

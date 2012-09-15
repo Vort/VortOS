@@ -97,8 +97,8 @@ public:
 
 		if (gpuVersion != 0x00)
 		{
-			bar0 = GetPCIDeviceReg(bus, device, function, 0x10) & ~0x3;
-			bar1 = GetPCIDeviceReg(bus, device, function, 0x14) & ~0xF;
+			bar0 = ReadPCIConfDword(bus, device, function, 0x10) & ~0x3;
+			bar1 = ReadPCIConfDword(bus, device, function, 0x14) & ~0xF;
 			return true;
 		}
 		return false;

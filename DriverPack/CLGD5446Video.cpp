@@ -97,7 +97,7 @@ public:
 		if (!GetPCIDeviceByID(0x1013, 0x00B8, Bus, Device, Function))
 			return false;
 
-		dword RegVal = GetPCIDeviceReg(Bus, Device, Function, 0x10);
+		dword RegVal = ReadPCIConfDword(Bus, Device, Function, 0x10);
 		m_FBBase = RegVal & 0xFF000000;
 		return true;
 	}

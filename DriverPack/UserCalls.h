@@ -29,7 +29,9 @@
 #define ClFileSystem_FindNextFile 0xD6121DCB
 
 #define ClPCI_GetDeviceByID 0xA1E10FC1
-#define ClPCI_GetDeviceReg 0xA42CB9A4
+#define ClPCI_ReadConfByte 0xAA1CE530
+#define ClPCI_ReadConfWord 0x55CE0923
+#define ClPCI_ReadConfDword 0x2626B663
 #define ClPCI_GetDeviceCount 0x693E5154
 #define ClPCI_GetDeviceInfoByIndex 0x54323DBF
 

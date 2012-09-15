@@ -13,7 +13,7 @@ public:
 		m_Device = Device;
 		m_Function = Function;
 
-		dword VendorDevice = ReadReg(0);
+		dword VendorDevice = ReadConfDword(0x00);
 
 		m_VendorID = VendorDevice & 0xFFFF;
 		m_DeviceID = VendorDevice >> 16;
@@ -74,21 +74,50 @@ public:
 		return m_DeviceID;
 	}
 
-	dword ReadReg(dword RegNumber)
+	byte ReadConfByte(byte regOffset)
 	{
-		dword R = MakePCIReg(m_Bus, m_Device, m_Function, RegNumber);
-		KeOutPortDword(0xCF8, R);
+		KeOutPortDword(0xCF8, MakeConfAddr(m_Bus, m_Device, m_Function, regOffset));
+		return KeInPortByte(0xCFC);
+	}
+
+	word ReadConfWord(byte regOffset)
+	{
+		KeOutPortDword(0xCF8, MakeConfAddr(m_Bus, m_Device, m_Function, regOffset));
+		return KeInPortWord(0xCFC);
+	}
+
+	dword ReadConfDword(byte regOffset)
+	{
+		KeOutPortDword(0xCF8, MakeConfAddr(m_Bus, m_Device, m_Function, regOffset));
 		return KeInPortDword(0xCFC);
 	}
 
+	void WriteConfByte(byte regOffset, byte val)
+	{
+		KeOutPortDword(0xCF8, MakeConfAddr(m_Bus, m_Device, m_Function, regOffset));
+		KeOutPortByte(0xCFC, val);
+	}
+
+	void WriteConfWord(byte regOffset, word val)
+	{
+		KeOutPortDword(0xCF8, MakeConfAddr(m_Bus, m_Device, m_Function, regOffset));
+		KeOutPortWord(0xCFC, val);
+	}
+
+	void WriteConfDword(byte regOffset, dword val)
+	{
+		KeOutPortDword(0xCF8, MakeConfAddr(m_Bus, m_Device, m_Function, regOffset));
+		KeOutPortDword(0xCFC, val);
+	}
+
 private:
-	dword MakePCIReg(byte BusNumber, byte DevNumber, byte FuncNumber, byte RegNumber)
+	dword MakeConfAddr(byte busNumber, byte devNumber, byte funcNumber, byte regOffset)
 	{
 		dword R = 0x80000000;
-		R |= BusNumber << 16;
-		R |= (DevNumber & 0x1F) << 11;
-		R |= (FuncNumber & 0x7) << 8;
-		R |= RegNumber & 0xFC;
+		R |= busNumber << 16;
+		R |= (devNumber & 0x1F) << 11;
+		R |= (funcNumber & 0x7) << 8;
+		R |= regOffset;
 		return R;
 	}
 
@@ -124,14 +153,19 @@ public:
 			}
 
 		KeEnableNotification(NfKe_TerminateProcess);
+		KeEnableNotification(NfPCI_WriteConfByte);
+		KeEnableNotification(NfPCI_WriteConfWord);
+		KeEnableNotification(NfPCI_WriteConfDword);
 		KeEnableCallRequest(ClPCI_GetDeviceByID);
-		KeEnableCallRequest(ClPCI_GetDeviceReg);
+		KeEnableCallRequest(ClPCI_ReadConfByte);
+		KeEnableCallRequest(ClPCI_ReadConfWord);
+		KeEnableCallRequest(ClPCI_ReadConfDword);
 		KeEnableCallRequest(ClPCI_GetDeviceCount);
 		KeEnableCallRequest(ClPCI_GetDeviceInfoByIndex);
 		KeSetSymbol(SmPCI_Ready);
 		
 		CCallRequest<0x10> CR;
-		CNotification<4> N;
+		CNotification<8> N;
 		for (;;)
 		{
 			KeWaitFor(3);
@@ -143,7 +177,25 @@ public:
 			{
 				N.Recv();
 				if (N.GetID() == NfKe_TerminateProcess)
+				{
 					return;
+				}
+				else if (
+					(N.GetID() == NfPCI_WriteConfByte) ||
+					(N.GetID() == NfPCI_WriteConfWord) ||
+					(N.GetID() == NfPCI_WriteConfDword))
+				{
+					CPCIDevice D = GetDevice(N.GetByte(0), N.GetByte(1), N.GetByte(2));
+					if (D.IsPresent())
+					{
+						if (N.GetID() == NfPCI_WriteConfByte)
+							D.WriteConfByte(N.GetByte(3), *(byte*)(N.GetBuf() + 4));
+						else if (N.GetID() == NfPCI_WriteConfWord)
+							D.WriteConfWord(N.GetByte(3), *(word*)(N.GetBuf() + 4));
+						else if (N.GetID() == NfPCI_WriteConfDword)
+							D.WriteConfDword(N.GetByte(3), *(dword*)(N.GetBuf() + 4));
+					}
+				}
 			}
 			for (dword z = 0; z < CallCount; z++)
 			{
@@ -162,13 +214,34 @@ public:
 					else
 						CR.Respond();
 				}
-				else if (CR.GetTypeID() == ClPCI_GetDeviceReg)
+				else if (
+					(CR.GetTypeID() == ClPCI_ReadConfByte) ||
+					(CR.GetTypeID() == ClPCI_ReadConfWord) ||
+					(CR.GetTypeID() == ClPCI_ReadConfDword))
 				{
 					CPCIDevice D = GetDevice(CR.GetByte(0), CR.GetByte(1), CR.GetByte(2));
-					dword R = 0;
 					if (D.IsPresent())
-						R = D.ReadReg(CR.GetByte(3));
-					CR.Respond(R);
+					{
+						if (CR.GetTypeID() == ClPCI_ReadConfByte)
+						{
+							byte r = D.ReadConfByte(CR.GetByte(3));
+							CR.Respond((byte*)&r, 1);
+						}
+						else if (CR.GetTypeID() == ClPCI_ReadConfWord)
+						{
+							word r = D.ReadConfWord(CR.GetByte(3));
+							CR.Respond((byte*)&r, 2);
+						}
+						else if (CR.GetTypeID() == ClPCI_ReadConfDword)
+						{
+							dword r = D.ReadConfDword(CR.GetByte(3));
+							CR.Respond((byte*)&r, 4);
+						}
+					}
+					else
+					{
+						CR.Respond();
+					}
 				}
 				else if (CR.GetTypeID() == ClPCI_GetDeviceCount)
 				{

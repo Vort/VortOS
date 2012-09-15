@@ -367,17 +367,44 @@ void FillSurface(dword SurfID, dword Color)
 }
 
 // ----------------------------------------------------------------------------
-dword GetPCIDeviceReg(byte Bus, byte Device, byte Function, byte RegIndex)
+byte ReadPCIConfByte(byte bus, byte device, byte function, byte regOffset)
 {
-	byte ReqBuf[4];
-	ReqBuf[0] = Bus;
-	ReqBuf[1] = Device;
-	ReqBuf[2] = Function;
-	ReqBuf[3] = RegIndex;
+	byte regVal = 0;
+	byte reqBuf[4] = {bus, device, function, regOffset};
+	KeRequestCall(ClPCI_ReadConfByte, reqBuf, 4, (byte*)(&regVal), 1);
+	return regVal;
+}
 
-	dword RegVal = 0;
-	KeRequestCall(ClPCI_GetDeviceReg, ReqBuf, 4, PB(&RegVal), 4);
-	return RegVal;
+// ----------------------------------------------------------------------------
+word ReadPCIConfWord(byte bus, byte device, byte function, byte regOffset)
+{
+	word regVal = 0;
+	byte reqBuf[4] = {bus, device, function, regOffset};
+	KeRequestCall(ClPCI_ReadConfWord, reqBuf, 4, (byte*)(&regVal), 2);
+	return regVal;
+}
+
+// ----------------------------------------------------------------------------
+dword ReadPCIConfDword(byte bus, byte device, byte function, byte regOffset)
+{
+	dword regVal = 0;
+	byte reqBuf[4] = {bus, device, function, regOffset};
+	KeRequestCall(ClPCI_ReadConfDword, reqBuf, 4, (byte*)(&regVal), 4);
+	return regVal;
+}
+
+// ----------------------------------------------------------------------------
+void WritePCIConfByte(byte bus, byte device, byte function, byte regOffset, byte regValue)
+{
+	byte reqBuf[5] = {bus, device, function, regOffset, regValue};
+	KeNotify(NfPCI_WriteConfByte, reqBuf, 5);
+}
+
+// ----------------------------------------------------------------------------
+void WritePCIConfWord(byte bus, byte device, byte function, byte regOffset, word regValue)
+{
+	byte reqBuf[6] = {bus, device, function, regOffset, regValue & 0xFF, regValue >> 8};
+	KeNotify(NfPCI_WriteConfWord, reqBuf, 6);
 }
 
 // ----------------------------------------------------------------------------

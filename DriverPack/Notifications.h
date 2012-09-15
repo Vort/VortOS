@@ -23,6 +23,10 @@
 
 #define NfCom_Data 0x46C7EBC5
 
+#define NfPCI_WriteConfByte 0xF3A20E32
+#define NfPCI_WriteConfWord 0x82C56C07
+#define NfPCI_WriteConfDword 0x1214C0E0
+
 #define NfNetwork_SendPacket 0x8CB8FB1A
 #define NfNetwork_RecvdPacket 0xBAC9148A
 

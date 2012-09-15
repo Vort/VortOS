@@ -74,6 +74,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Am79C970.cpp" />
     <ClCompile Include="ATA.cpp" />
     <ClCompile Include="Benchmark.cpp" />
     <ClCompile Include="BochsVideo.cpp" />

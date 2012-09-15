@@ -88,7 +88,7 @@ public:
 		if (!GetPCIDeviceByID(0x15AD, 0x0405, Bus, Device, Function))
 			return false;
 
-		dword RegVal = GetPCIDeviceReg(Bus, Device, Function, 0x10);
+		dword RegVal = ReadPCIConfDword(Bus, Device, Function, 0x10);
 		m_IndexPort = RegVal & (~3);
 		return true;
 	}
