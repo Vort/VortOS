@@ -106,6 +106,7 @@
     <ClCompile Include="PS2Mouse.cpp" />
     <ClCompile Include="Reboot.cpp" />
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Rtl8139.cpp" />
     <ClCompile Include="S3Trio64Video.cpp" />
     <ClCompile Include="SAnim.cpp" />
     <ClCompile Include="Serial.cpp" />

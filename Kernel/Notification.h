@@ -9,6 +9,7 @@ const dword NfKe_IRQ1 = 0x81C8E411;
 const dword NfKe_IRQ4 = 0xC130AC48;
 const dword NfKe_IRQ6 = 0x068DD029;
 const dword NfKe_IRQ9 = 0xA714ECAC;
+const dword NfKe_IRQ11 = 0x704A32B0;
 const dword NfKe_IRQ12 = 0xD8E07352;
 
 const dword NfKe_ProcessExited = 0x389DF145;

@@ -27,50 +27,41 @@ public:
 		KeEnableCallRequest(ClNetwork_GetSelfMACAddress);
 
 		// page = 1, no DMA, start
-		KeOutPortByte(baseAddress + 0x0, 0x62); // CR
+		WriteRegisterByte(0x0, 0x62); // CR
 		// current read pointer = page 72
-		KeOutPortByte(baseAddress + 0x7, 0x48); // CURR
+		WriteRegisterByte(0x7, 0x48); // CURR
 		// page = 0, no DMA, start
-		KeOutPortByte(baseAddress + 0x0, 0x22); // CR
+		WriteRegisterByte(0x0, 0x22); // CR
 		// read ring = page 72 .. page 96
-		KeOutPortByte(baseAddress + 0x1, 0x48); // PSTART
-		KeOutPortByte(baseAddress + 0x2, 0x60); // PSTOP
+		WriteRegisterByte(0x1, 0x48); // PSTART
+		WriteRegisterByte(0x2, 0x60); // PSTOP
 		// last read packet at page 96
-		KeOutPortByte(baseAddress + 0x3, 0x48); // BNRY
+		WriteRegisterByte(0x3, 0x48); // BNRY
 		// accept broadcast
-		KeOutPortByte(baseAddress + 0xC, 0x04); // RCR
+		WriteRegisterByte(0xC, 0x04); // RCR
 		// fifo = 2, no loopback, LE byte order, word DMA
-		KeOutPortByte(baseAddress + 0xE, 0xC9); // DCR
+		WriteRegisterByte(0xE, 0xC9); // DCR
 		// unmask PTX and PRX
-		KeOutPortByte(baseAddress + 0xF, 0x3);  // IMR
+		WriteRegisterByte(0xF, 0x3);  // IMR
 
 		// Retrieve MAC address
-		KeOutPortByte(baseAddress + 0x0, 0x0A); // CR
-		KeOutPortByte(baseAddress + 0x8, 0x00); // RSAR0
-		KeOutPortByte(baseAddress + 0x9, 0x00); // RSAR1
-		KeOutPortByte(baseAddress + 0xA, 0x0E); // RBCR0
-		KeOutPortByte(baseAddress + 0xB, 0x00); // RBCR1
+		WriteRegisterByte(0x0, 0x0A); // CR
+		WriteRegisterByte(0x8, 0x00); // RSAR0
+		WriteRegisterByte(0x9, 0x00); // RSAR1
+		WriteRegisterByte(0xA, 0x0C); // RBCR0
+		WriteRegisterByte(0xB, 0x00); // RBCR1
 
 		for (int i = 0; i < 6; i++)
-		{
 			macAddr[i] = KeInPortWord(baseAddress + 0x10);
-		}
-
-		if (KeInPortWord(baseAddress + 0x10) != 0x5757)
-			return;
 
 		// page = 1, no DMA, start
-		KeOutPortByte(baseAddress + 0x0, 0x62); // CR
+		WriteRegisterByte(0x0, 0x62); // CR
 
-		KeOutPortByte(baseAddress + 0x1, macAddr[0]); // PAR0
-		KeOutPortByte(baseAddress + 0x2, macAddr[1]); // PAR1
-		KeOutPortByte(baseAddress + 0x3, macAddr[2]); // PAR2
-		KeOutPortByte(baseAddress + 0x4, macAddr[3]); // PAR3
-		KeOutPortByte(baseAddress + 0x5, macAddr[4]); // PAR4
-		KeOutPortByte(baseAddress + 0x6, macAddr[5]); // PAR5
+		for (int i = 0; i < 6; i++)
+			WriteRegisterByte(1 + i, macAddr[i]); // PAR0-5
 
 		// page = 0, no DMA, start
-		KeOutPortByte(baseAddress + 0x0, 0x22); // CR
+		WriteRegisterByte(0x0, 0x22); // CR
 
 		KeWaitForSymbol(SmNetwork_Waiting);
 		KeSetSymbol(SmNetwork_Ready);
@@ -116,41 +107,41 @@ public:
 
 	void ProcessIRQ9()
 	{
-		byte isr = KeInPortByte(baseAddress + 0x7);
+		byte isr = ReadRegisterByte(0x7);
 		if (isr & 0x01) // rx
 		{
 			for (;;)
 			{
-				KeOutPortByte(baseAddress + 0x0, 0x4A); // CR
-				byte currentPage = KeInPortByte(baseAddress + 0x7);
-				KeOutPortByte(baseAddress + 0x0, 0x0A); // CR
+				WriteRegisterByte(0x0, 0x4A); // CR
+				byte currentPage = ReadRegisterByte(0x7);
+				WriteRegisterByte(0x0, 0x0A); // CR
 
 				if (nextPacketPage == currentPage)
 					break;
 
-				KeOutPortByte(baseAddress + 0x8, 0x00); // RSAR0
-				KeOutPortByte(baseAddress + 0x9, nextPacketPage); // RSAR1
-				KeOutPortByte(baseAddress + 0xA, 0x04); // RBCR0
-				KeOutPortByte(baseAddress + 0xB, 0x00); // RBCR1
+				WriteRegisterByte(0x8, 0x00); // RSAR0
+				WriteRegisterByte(0x9, nextPacketPage); // RSAR1
+				WriteRegisterByte(0xA, 0x04); // RBCR0
+				WriteRegisterByte(0xB, 0x00); // RBCR1
 
 				nextPacketPage = KeInPortWord(baseAddress + 0x10) >> 8;
 				word packetSize = KeInPortWord(baseAddress + 0x10) - 4;
 				dword wordCount = (packetSize + 1) / 2;
-				KeOutPortByte(baseAddress + 0xA, (wordCount * 2) & 0xFF); // RBCR0
-				KeOutPortByte(baseAddress + 0xB, (wordCount * 2) >> 8); // RBCR1
+				WriteRegisterByte(0xA, (wordCount * 2) & 0xFF); // RBCR0
+				WriteRegisterByte(0xB, (wordCount * 2) >> 8); // RBCR1
 				KeInPortWordArray(baseAddress + 0x10, wordCount, packetBuf);
 
-				KeOutPortByte(baseAddress + 0x3, nextPacketPage); // BNRY
+				WriteRegisterByte(0x3, nextPacketPage); // BNRY
 
 				KeNotify(NfNetwork_RecvdPacket, (byte*)packetBuf, packetSize);
 			}
 
-			KeOutPortByte(baseAddress + 0x7, 0x01);
+			WriteRegisterByte(0x7, 0x01);
 		}
 		if (isr & 0x02) // tx
 		{
 			sending = false;
-			KeOutPortByte(baseAddress + 0x7, 0x02);
+			WriteRegisterByte(0x7, 0x02);
 		}
 		KeEndOfInterrupt(9);
 	}
@@ -158,21 +149,31 @@ public:
 	void SendPacket(byte* data, int len)
 	{
 		sending = true;
-		KeOutPortByte(baseAddress + 0x8, 0x00); // RSAR0
-		KeOutPortByte(baseAddress + 0x9, 0x40); // RSAR1
-		KeOutPortByte(baseAddress + 0xA, len & 0xFF); // RBCR0
-		KeOutPortByte(baseAddress + 0xB, len >> 8); // RBCR1
-		KeOutPortByte(baseAddress + 0x0, 0x12); // CR
+		WriteRegisterByte(0x8, 0x00); // RSAR0
+		WriteRegisterByte(0x9, 0x40); // RSAR1
+		WriteRegisterByte(0xA, len & 0xFF); // RBCR0
+		WriteRegisterByte(0xB, len >> 8); // RBCR1
+		WriteRegisterByte(0x0, 0x12); // CR
 
 		for (int i = 0; i < len / 2; i++)
 			KeOutPortWord(baseAddress + 0x10, ((word*)data)[i]);
 		if (len & 1 == 1)
 			KeOutPortWord(baseAddress + 0x10, data[len - 1]);
 
-		KeOutPortByte(baseAddress + 0x4, 0x40); // TPSR
-		KeOutPortByte(baseAddress + 0x5, len & 0xFF); // TBCR0
-		KeOutPortByte(baseAddress + 0x6, len >> 8); // TBCR1
-		KeOutPortByte(baseAddress + 0x0, 0x06); // CR
+		WriteRegisterByte(0x4, 0x40); // TPSR
+		WriteRegisterByte(0x5, len & 0xFF); // TBCR0
+		WriteRegisterByte(0x6, len >> 8); // TBCR1
+		WriteRegisterByte(0x0, 0x06); // CR
+	}
+
+	byte ReadRegisterByte(byte index)
+	{
+		return KeInPortByte(baseAddress + index);
+	}
+
+	void WriteRegisterByte(byte index, byte value)
+	{
+		KeOutPortByte(baseAddress + index, value);
 	}
 
 	bool Detect()

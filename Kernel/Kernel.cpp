@@ -927,6 +927,17 @@ void CKernel::OnKeUnmapSharedMem()
 }
 
 // ----------------------------------------------------------------------------
+void CKernel::OnKeAllocLinearBlock()
+{
+	if (m_KeCallInDataSize != 4) return;
+	if (m_KeCallOutDataSize != 4) return;
+
+	dword pageCount = *(dword*)(m_KeCallInDataBuf);
+	dword virtBase = dword(m_ActiveThread->AllocLinearBlock(pageCount));
+	*(dword*)(m_KeCallOutDataBuf) = virtBase;
+}
+
+// ----------------------------------------------------------------------------
 void CKernel::OnKeCall(dword FunctionIndex)
 {
 	m_KeCallRealOutDataSize = m_KeCallOutDataSize;
@@ -976,6 +987,7 @@ void CKernel::OnKeCall(dword FunctionIndex)
 	case 47: OnKeEndOfInterrupt(); break;
 	case 48: OnKeSetGeneralProtectionExceptionHandler(); break;
 	case 49: OnKeUnmapSharedMem(); break;
+	case 50: OnKeAllocLinearBlock(); break;
 	}
 }
 
@@ -1071,6 +1083,8 @@ void CKernel::ProcessHWIntRequest(dword Index)
 		BroadcastNotification(0, NfKe_IRQ6);
 	else if (Index == 0x29)
 		BroadcastNotification(0, NfKe_IRQ9);
+	else if (Index == 0x2B)
+		BroadcastNotification(0, NfKe_IRQ11);
 	else if (Index == 0x2C)
 		BroadcastNotification(0, NfKe_IRQ12);
 }

@@ -3,11 +3,12 @@ del %outdir%\* /Q
 
 set linkparams=-nologo -nod -fixed -opt:ref -entry:Entry -subsystem:windows ..\my_memcpy.obj ..\my_memset.obj OpNewDel.obj String2.obj
 
-cl.exe -c -GR- -GS- -Gs999999999 -Gy -Ox -Oy -O2 -Oi- -fp:fast -Fo"%outdir%\\" Hello.cpp Test.cpp i8042.cpp PS2Keyb.cpp PS2Mouse.cpp Floppy.cpp DMA.cpp FileSys.cpp Viewer.cpp OpNewDel.cpp String2.cpp Cursor.cpp Font.cpp ProcInfo.cpp Desktop.cpp PCI.cpp Renderer.cpp SurfMgr.cpp DebugConsole.cpp Serial.cpp SerialMouse.cpp BochsVideo.cpp VMwareVideo.cpp VGAVideo.cpp PCIList.cpp ATA.cpp CLGD5446Video.cpp FAT.cpp Cache.cpp Partition.cpp Reboot.cpp SAnim.cpp FillBenchmark.cpp CDFS.cpp S3Trio64Video.cpp Benchmark.cpp SysInit.cpp Network.cpp NE2000.cpp VMwareMouse.cpp KeApiTest.cpp GeForceVideo.cpp Am79C970.cpp
+cl.exe -c -GR- -GS- -Gs999999999 -Gy -Ox -Oy -O2 -Oi- -fp:fast -Fo"%outdir%\\" Hello.cpp Test.cpp i8042.cpp PS2Keyb.cpp PS2Mouse.cpp Floppy.cpp DMA.cpp FileSys.cpp Viewer.cpp OpNewDel.cpp String2.cpp Cursor.cpp Font.cpp ProcInfo.cpp Desktop.cpp PCI.cpp Renderer.cpp SurfMgr.cpp DebugConsole.cpp Serial.cpp SerialMouse.cpp BochsVideo.cpp VMwareVideo.cpp VGAVideo.cpp PCIList.cpp ATA.cpp CLGD5446Video.cpp FAT.cpp Cache.cpp Partition.cpp Reboot.cpp SAnim.cpp FillBenchmark.cpp CDFS.cpp S3Trio64Video.cpp Benchmark.cpp SysInit.cpp Network.cpp NE2000.cpp VMwareMouse.cpp KeApiTest.cpp GeForceVideo.cpp Am79C970.cpp Rtl8139.cpp
 cd %outdir%
 link.exe %linkparams% -out:VMwareMouse.bi_ VMwareMouse.obj
 link.exe %linkparams% -out:Am79C970.bi_ Am79C970.obj
 link.exe %linkparams% -out:NE2000.bi_ NE2000.obj
+link.exe %linkparams% -out:Rtl8139.bi_ Rtl8139.obj
 link.exe %linkparams% -out:Network.bi_ Network.obj
 link.exe %linkparams% -out:S3Trio64Video.bi_ S3Trio64Video.obj
 link.exe %linkparams% -out:GeForceVideo.bi_ GeForceVideo.obj
@@ -55,6 +56,7 @@ link.exe %linkparams% -out:CLGD5446Video.bi_ CLGD5446Video.obj
 ..\DriverStripper.exe SerialMouse.bi_ "|1|" "(0)"
 ..\DriverStripper.exe VMwareMouse.bi_ "|1|" "(0)"
 
+..\DriverStripper.exe Rtl8139.bi_ "|2|" "(0)"
 ..\DriverStripper.exe Am79C970.bi_ "|2|" "(0)"
 ..\DriverStripper.exe NE2000.bi_ "|2|" "(0)"
 ..\DriverStripper.exe Cursor.bi_ "|2|" "(1)"

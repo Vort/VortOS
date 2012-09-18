@@ -42,11 +42,11 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 	dword RDataPageCount = (RDataSize + 4095) / 4096;
 	dword DataPageCount = (DataVSize + 4095) / 4096;
 
-	m_Ring0Stack = (byte*)AllocBlock(1);
-	m_Ring3Stack = (byte*)AllocBlock(c_StackPageCount);
-	byte* Code = (byte*)AllocBlock(CodePageCount);
-	byte* RData = (byte*)AllocBlock(RDataPageCount);
-	byte* Data = (byte*)AllocBlock(DataPageCount);
+	m_Ring0Stack = (byte*)AllocPhysBlock(1);
+	m_Ring3Stack = (byte*)AllocPhysBlock(c_StackPageCount);
+	byte* Code = (byte*)AllocPhysBlock(CodePageCount);
+	byte* RData = (byte*)AllocPhysBlock(RDataPageCount);
+	byte* Data = (byte*)AllocPhysBlock(DataPageCount);
 
 	dword GDTBase = GDT.GetBase();
 	m_VMM->MapPageAt(GDTBase, GDTBase, true);
@@ -105,7 +105,7 @@ CThread::~CThread()
 {
 	for (dword i = 0; i < m_AllocatedBlocks.Size(); i++)
 	{
-		m_PMM.ReleaseBlock(PB(m_AllocatedBlocks[i].m_PageBase),
+		m_PMM.ReleaseBlock((byte*)m_AllocatedBlocks[i].m_PageBase,
 			m_AllocatedBlocks[i].m_PageCount);
 	}
 }
@@ -178,10 +178,10 @@ void* CThread::MemAlloc(dword ByteCount)
 {
 	if (ByteCount == 0)
 		return null;
-	void* R = m_UH->Alloc(ByteCount);
-	if (R == 0)
-		R = AllocVirtualBlock((ByteCount + 0xFFF) >> 12);
-	return R;
+	void* virtBase = m_UH->Alloc(ByteCount);
+	if (virtBase == 0)
+		virtBase = AllocChainBlock((ByteCount + 0xFFF) >> 12);
+	return virtBase;
 }
 
 // ----------------------------------------------------------------------------
@@ -192,19 +192,27 @@ void CThread::MemFree(void* Base)
 }
 
 // ----------------------------------------------------------------------------
-void* CThread::AllocBlock(dword PageCount)
+void* CThread::AllocPhysBlock(dword pageCount)
 {
-	void* BlockBase = m_PMM.AllocBlock(PageCount);
-	m_AllocatedBlocks.PushBack(CBlockInfo(dword(BlockBase), PageCount));
-	return BlockBase;
+	void* blockBase = m_PMM.AllocBlock(pageCount);
+	m_AllocatedBlocks.PushBack(CBlockInfo(dword(blockBase), pageCount));
+	return blockBase;
 }
 
 // ----------------------------------------------------------------------------
-void* CThread::AllocVirtualBlock(dword PageCount)
+void* CThread::AllocLinearBlock(dword pageCount)
 {
-	CSingleMappedChain MC(m_PMM, m_VMM, PageCount);
+	void* physBase = AllocPhysBlock(pageCount);
+	void* virtBase = (void*)m_VMM->MapBlock((dword)physBase, pageCount);
+	return virtBase;
+}
+
+// ----------------------------------------------------------------------------
+void* CThread::AllocChainBlock(dword pageCount)
+{
+	CSingleMappedChain MC(m_PMM, m_VMM, pageCount);
 	m_MappedChains.PushBack(MC);
-	return PV(MC.GetVirtualBase());
+	return (void*)MC.GetVirtualBase();
 }
 
 // ----------------------------------------------------------------------------

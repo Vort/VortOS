@@ -442,4 +442,12 @@ void KeUnmapSharedMem(dword SMID)
 {
 	GenericKeCall(49, 4, 0, PB(&SMID), 0);
 }
+
+// ----------------------------------------------------------------------------
+byte* KeAllocLinearBlock(dword pageCount)
+{
+	dword virtBase;
+	GenericKeCall(50, 4, 4, (byte*)(&pageCount), (byte*)(&virtBase));
+	return (byte*)virtBase;
+}
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

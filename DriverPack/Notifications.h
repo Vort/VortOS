@@ -9,6 +9,7 @@
 #define NfKe_IRQ4 0xC130AC48
 #define NfKe_IRQ6 0x068DD029
 #define NfKe_IRQ9 0xA714ECAC
+#define NfKe_IRQ11 0x704A32B0
 #define NfKe_IRQ12 0xD8E07352
 #define NfKe_ProcessExited 0x389DF145
 #define NfKe_TerminateProcess 0xDD41ACFB

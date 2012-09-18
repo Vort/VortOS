@@ -112,6 +112,7 @@ public:
 	void OnKeEndOfInterrupt();
 	void OnKeSetGeneralProtectionExceptionHandler();
 	void OnKeUnmapSharedMem();
+	void OnKeAllocLinearBlock();
 
 private:
 	dword m_TickCount;

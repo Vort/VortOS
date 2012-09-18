@@ -101,6 +101,7 @@ public:
 
 	void* MemAlloc(dword ByteCount);
 	void MemFree(void* Base);
+	void* AllocLinearBlock(dword pageCount);
 
 	byte* GetRing0Stack();
 	CTask& GetTask();
@@ -147,8 +148,8 @@ public:
 	bool IsWaiting();
 
 private:
-	void* AllocBlock(dword PageCount);
-	void* AllocVirtualBlock(dword PageCount);
+	void* AllocPhysBlock(dword pageCount);
+	void* AllocChainBlock(dword pageCount);
 	void FreeVirtualBlock(dword VirtualBase);
 
 private:
