@@ -64,23 +64,13 @@ public:
 		if (irq != 11) // hack
 			return;
 
-		// Read MAC address
-		for (int i = 0; i < 6; i++)
-			macAddr[i] = ReadRegisterByte(i);
-
-		for (int i = 0; i < 6; i++)
-		{
-			if (i != 0)
-				DebugOut(":", 1);
-			DebugOut(macAddr[i]);
-		}
-
 		// Reset controller
 		WriteRegisterByte(0x37, 1 << 4);
 
 		// Waiting for reset completion
 		while ((ReadRegisterByte(0x37) & (1 << 4)) != 0);
 
+		// Get adapter version
 		dword reg40 = ReadRegisterDword(0x40);
 		hwVersionId = ((reg40 >> 22) & 3) | (((reg40 >> 26) & 0x1F) << 2);
 
@@ -91,6 +81,11 @@ public:
 			return;
 		}
 
+		// Read MAC address
+		for (int i = 0; i < 6; i++)
+			macAddr[i] = ReadRegisterByte(i);
+
+		// Init send buffers
 		for (int i = 0; i < 2; i++)
 		{
 			sendBuffers[i * 2 + 0] = new byte[0x1000];
@@ -109,6 +104,10 @@ public:
 			WriteRegisterDword(0x20 + i * 4, KeVirtToPhys(sendBuffers[i]));
 		}
 
+		// Enable transmitter and receiver
+		WriteRegisterByte(0x37, (1 << 2) | (1 << 3));
+
+		// Set receive buffer address
 		recvBuffer = KeAllocLinearBlock(3);
 		WriteRegisterDword(0x30, KeVirtToPhys(recvBuffer));
 
@@ -121,8 +120,8 @@ public:
 		// Enable transmit ok interrupt, receive ok interrupt
 		WriteRegisterWord(0x3C, (1 << 2) | (1 << 0));
 
-		// Enable transmitter and receiver
-		WriteRegisterByte(0x37, (1 << 2) | (1 << 3));
+		// Clear missed packet counter
+		WriteRegisterDword(0x4C, 0);
 
 		KeWaitForSymbol(SmNetwork_Waiting);
 		KeSetSymbol(SmNetwork_Ready);
@@ -152,8 +151,15 @@ public:
 					*(dword*)(&td) = ReadRegisterDword(0x10 + nextTransmitIndex * 4);
 					if (td.OWN == 1)
 					{
+						word packetLen = N.GetSize();
+						if (packetLen < 60)
+						{
+							// Padding
+							memset(sendBuffers[nextTransmitIndex] + packetLen, 0x00, 60 - packetLen);
+							packetLen = 60;
+						}
 						td.OWN = 0;
-						td.SIZE = N.GetSize();
+						td.SIZE = packetLen;
 						memcpy(sendBuffers[nextTransmitIndex], N.GetBuf(), N.GetSize());
 						WriteRegisterDword(0x10 + nextTransmitIndex * 4, *(dword*)(&td));
 						nextTransmitIndex = (nextTransmitIndex + 1) % 4;
@@ -177,13 +183,20 @@ public:
 
 	void ProcessIRQ11()
 	{
+		word isr = ReadRegisterWord(0x3E);
+		DebugOut("[irq11]", 7);
+
 		// transmit ok interrupt
-		if ((ReadRegisterWord(0x3E) & (1 << 2)) != 0)
+		if ((isr & (1 << 2)) != 0)
+		{
+			DebugOut("[tok]", 5);
 			WriteRegisterWord(0x3E, 1 << 2);
+		}
 
 		// receive ok interrupt
-		if ((ReadRegisterWord(0x3E) & (1 << 0)) != 0)
+		if ((isr & (1 << 0)) != 0)
 		{
+			DebugOut("[rok]", 5);
 			word packetLen = *(word*)(recvBuffer + nextRecvOffset + 2);
 			KeNotify(NfNetwork_RecvdPacket, recvBuffer + nextRecvOffset + 4, packetLen - 4);
 			WriteRegisterWord(0x38, nextRecvOffset);

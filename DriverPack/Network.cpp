@@ -102,6 +102,7 @@ class Network
 private:
 	dword dhcpXId;
 	byte dhcpSrvIp[4];
+	dword discoverTime;
 
 	byte broadcastIp[4];
 	byte broadcastMac[6];
@@ -120,12 +121,14 @@ public:
 		memset(selfIp, 0x00, 4);
 		memset(dhcpSrvIp, 0x00, 4);
 
+		KeEnableNotification(NfKe_IRQ0);
 		KeEnableNotification(NfNetwork_RecvdPacket);
 
 		KeSetSymbol(SmNetwork_Waiting);
 		KeWaitForSymbol(SmNetwork_Ready);
 		KeRequestCall(ClNetwork_GetSelfMACAddress, null, 0, selfMac, 6);
 
+		dhcpXId = GetRandomDword();
 		SendDhcpDiscover();
 
 		CNotification<2048> N;
@@ -137,7 +140,13 @@ public:
 			for (dword z = 0; z < NfCount; z++)
 			{
 				N.Recv();
-				if (N.GetID() == NfNetwork_RecvdPacket)
+				if (N.GetID() == NfKe_IRQ0)
+				{
+					if (IsIpEqual(dhcpSrvIp, zeroIp))
+						if (KeGetTime() - discoverTime >= 5000)
+							SendDhcpDiscover();
+				}
+				else if (N.GetID() == NfNetwork_RecvdPacket)
 				{
 					ProcessPacket(N.GetBuf(), N.GetSize());
 				}
@@ -532,7 +541,7 @@ public:
 
 	void SendDhcpDiscover()
 	{
-		dhcpXId = GetRandomDword();
+		discoverTime = KeGetTime();
 
 		const int packetLen = sizeof(DhcpHeader) + 4;
 		byte packet[packetLen] = {0};
