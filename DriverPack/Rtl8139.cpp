@@ -184,23 +184,22 @@ public:
 	void ProcessIRQ11()
 	{
 		word isr = ReadRegisterWord(0x3E);
-		DebugOut("[irq11]", 7);
 
 		// transmit ok interrupt
 		if ((isr & (1 << 2)) != 0)
-		{
-			DebugOut("[tok]", 5);
 			WriteRegisterWord(0x3E, 1 << 2);
-		}
 
 		// receive ok interrupt
 		if ((isr & (1 << 0)) != 0)
 		{
-			DebugOut("[rok]", 5);
-			word packetLen = *(word*)(recvBuffer + nextRecvOffset + 2);
-			KeNotify(NfNetwork_RecvdPacket, recvBuffer + nextRecvOffset + 4, packetLen - 4);
-			WriteRegisterWord(0x38, nextRecvOffset);
-			nextRecvOffset = (nextRecvOffset + (packetLen + 4 + 3) & ~3) % 8192;
+			// While buffer not empty
+			while ((ReadRegisterByte(0x37) & (1 << 0)) == 0)
+			{
+				word packetLen = *(word*)(recvBuffer + nextRecvOffset + 2);
+				KeNotify(NfNetwork_RecvdPacket, recvBuffer + nextRecvOffset + 4, packetLen - 4);
+				nextRecvOffset = (nextRecvOffset + (packetLen + 4 + 3) & ~3) % 8192;
+				WriteRegisterWord(0x38, nextRecvOffset - 16);
+			}
 			WriteRegisterWord(0x3E, 1 << 0);
 		}
 
