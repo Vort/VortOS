@@ -90,7 +90,6 @@
       </DebugInformationFormat>
     </ClCompile>
     <Link>
-      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -105,12 +104,15 @@
     <ClCompile Include="DebugNew.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="String2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Array2.h" />
     <ClInclude Include="CRC32.h" />
     <ClInclude Include="Defs.h" />
     <ClInclude Include="File.h" />
+    <ClInclude Include="String2.h" />
+    <ClInclude Include="UnicodeConvert2.h" />
   </ItemGroup>
   <ItemGroup>
     <Object Include="my_memset.obj" />

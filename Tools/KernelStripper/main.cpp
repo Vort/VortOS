@@ -2,15 +2,29 @@
 #include "Defs.h"
 #include "File.h"
 #include "CRC32.h"
-
+#include "String2.h"
 #include <windows.h>
+#include "UnicodeConvert2.h"
 using namespace Lib;
 
 void main()
 {
-	CFile::Delete("Kernel.bin");
-	CopyFileA("Kernel.bi_", "Kernel.bin", true);
-	CFile F("Kernel.bin", ReadWrite);
+	int nArgs;
+	LPWSTR *szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
+
+	if (szArglist == NULL || nArgs < 2)
+	{
+		WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), "Error", 5, null, null);
+		return;
+	}
+
+	CStringA SourceFilename(CUnicodeConvert2().StringWToA(szArglist[1]));
+	CStringA DestFilename = SourceFilename;
+	DestFilename.Replace("bi_", "bin");
+
+	CFile::Delete(DestFilename._ptr());
+	CopyFileA(SourceFilename._ptr(), DestFilename._ptr(), true);
+	CFile F(DestFilename._ptr(), ReadWrite);
 	if (!F.IsOpened())
 		return;
 	if (F.GetSize() == 0)
