@@ -1,45 +1,38 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="CL" AssemblyName="Microsoft.Build.CppTasks.Win32, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <UsingTask TaskName="Link" AssemblyName="Microsoft.Build.CppTasks.Win32, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <UsingTask TaskName="SetEnv" AssemblyName="Microsoft.Build.CppTasks.Common, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <ItemGroup>
+    <PropertyPageSchema Include="$(VCTargetsPath)$(LangID)\general.xml;$(VCTargetsPath)$(LangID)\debugger_*.xml" />
+  </ItemGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <Import Project="$(VCTargetsPath)Platforms\Win32\PlatformToolsets\v100\Microsoft.Cpp.Win32.v100.props" Label="LocalAppDataPlatform" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4E620539-F58E-4055-B0AC-54A07F47B6D6}</ProjectGuid>
-    <RootNamespace>Kernel</RootNamespace>
-    <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-  </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.bat</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
-    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
-    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(ProjectDir)Library\;</IncludePath>
+    <ProjectDir>$(MSBuildProjectDirectory)\</ProjectDir>
+    <OutputPath>$(ProjectDir)Release\</OutputPath>
+    <ImagePath>$(ProjectDir)..\Image\</ImagePath>
+    <FloppyRootPath>$(ImagePath)FloppyRoot\</FloppyRootPath>
+    <CdRootPath>$(ImagePath)CDRoot\</CdRootPath>
   </PropertyGroup>
-  <ItemDefinitionGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerDebuggerType>Auto</LocalDebuggerDebuggerType>
+    <LocalDebuggerCommand>$(ImagePath)Run.bat</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(ImagePath)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <BuildLog>
+      <Path>$(OutputPath)Build.log</Path>
+    </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GDT.cpp" />
@@ -95,7 +88,25 @@
     <ClInclude Include="UserHeap.h" />
     <ClInclude Include="VirtMemManager.h" />
   </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <Target Name="Build">
+    <SetEnv Name="PATH" Value="$(ExecutablePath)" Prefix="false">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="Path" />
+    </SetEnv>
+    <SetEnv Name="INCLUDE" Value="$(IncludePath)" Prefix="false">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="INCLUDE" />
+    </SetEnv>
+    <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
+    <CL Sources="@(ClCompile)" BufferSecurityCheck="false" WholeProgramOptimization="true" StringPooling="true" Optimization="Full" OmitFramePointers="true" DebugInformationFormat="ProgramDatabase" ObjectFileName="$(OutputPath)" ProgramDataBaseFileName="$(OutputPath)vc100.pdb" />
+    <Link Sources="@(ClCompile ->'$(OutputPath)%(Filename).obj');$(ProjectDir)*.obj" GenerateDebugInformation="true" IgnoreAllDefaultLibraries="true" LinkTimeCodeGeneration="UseLinkTimeCodeGeneration" OptimizeReferences="true" FixedBaseAddress="true" BaseAddress="0x20000" EntryPointSymbol="Entry" SubSystem="Windows" OutputFile="$(OutputPath)Kernel.bi_" AdditionalOptions="/filealign:4096" />
+    <Exec Command="$(ProjectDir)KernelStripper.exe $(OutputPath)Kernel.bi_" />
+    <MakeDir Directories="$(FloppyRootPath)" Condition="!Exists('$(FloppyRootPath)')" />
+    <MakeDir Directories="$(CDRootPath)" Condition="!Exists('$(CDRootPath)')" />
+    <Copy SourceFiles="$(OutputPath)Kernel.bin" DestinationFolder="$(FloppyRootPath)\" />
+    <Copy SourceFiles="$(OutputPath)Kernel.bin" DestinationFolder="$(CDRootPath)\" />
+    <Exec Command="$(ImagePath)Pack.bat" WorkingDirectory="$(ImagePath)" />
+  </Target>
+  <Target Name="Clean">
+    <Exec Command="del $(OutputPath)* /Q" />
+  </Target>
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
 </Project>

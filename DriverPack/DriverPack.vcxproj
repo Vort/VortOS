@@ -1,124 +1,210 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="CL" AssemblyName="Microsoft.Build.CppTasks.Win32, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <UsingTask TaskName="Link" AssemblyName="Microsoft.Build.CppTasks.Win32, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <UsingTask TaskName="SetEnv" AssemblyName="Microsoft.Build.CppTasks.Common, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <ItemGroup>
+    <PropertyPageSchema Include="$(VCTargetsPath)$(LangID)\general.xml;$(VCTargetsPath)$(LangID)\debugger_*.xml" />
+  </ItemGroup>
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <Import Project="$(VCTargetsPath)Platforms\Win32\PlatformToolsets\v100\Microsoft.Cpp.Win32.v100.props" Label="LocalAppDataPlatform" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{30CC4278-0FA8-47D5-81D2-D4BC790125E9}</ProjectGuid>
-    <RootNamespace>DriverPack</RootNamespace>
-    <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compile.bat</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
-    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
-    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <ProjectDir>$(MSBuildProjectDirectory)\</ProjectDir>
+    <OutputPath>$(ProjectDir)Release\</OutputPath>
+    <ImagePath>$(ProjectDir)..\Image\</ImagePath>
+    <FloppyRootPath>$(ImagePath)FloppyRoot\</FloppyRootPath>
+    <CdRootPath>$(ImagePath)CDRoot\</CdRootPath>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <TargetMachine>MachineX86</TargetMachine>
-    </Link>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerDebuggerType>Auto</LocalDebuggerDebuggerType>
+    <LocalDebuggerCommand>$(ImagePath)Run.bat</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(ImagePath)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <BuildLog>
+      <Path>$(OutputPath)Build.log</Path>
+    </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Am79C970.cpp" />
-    <ClCompile Include="ATA.cpp" />
-    <ClCompile Include="Benchmark.cpp" />
-    <ClCompile Include="BochsVideo.cpp" />
-    <ClCompile Include="Cache.cpp" />
-    <ClCompile Include="CDFS.cpp" />
-    <ClCompile Include="CLGD5446Video.cpp" />
-    <ClCompile Include="Cursor.cpp" />
-    <ClCompile Include="DebugConsole.cpp" />
-    <ClCompile Include="Desktop.cpp" />
-    <ClCompile Include="DMA.cpp" />
-    <ClCompile Include="FastReboot.cpp" />
-    <ClCompile Include="FAT.cpp" />
-    <ClCompile Include="FileSys.cpp" />
-    <ClCompile Include="FillBenchmark.cpp" />
-    <ClCompile Include="Floppy.cpp" />
-    <ClCompile Include="Font.cpp" />
-    <ClCompile Include="GeForceVideo.cpp" />
-    <ClCompile Include="Hello.cpp" />
-    <ClCompile Include="i8042.cpp" />
-    <ClCompile Include="KeApiTest.cpp" />
-    <ClCompile Include="NE2000.cpp" />
-    <ClCompile Include="Network.cpp" />
+    <ClCompile Include="Am79C970.cpp">
+      <Priority>2</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="ATA.cpp">
+      <Priority>3</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Benchmark.cpp">
+      <Priority>6</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="BochsVideo.cpp">
+      <Priority>8</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Cache.cpp">
+      <Priority>3</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="CDFS.cpp">
+      <Priority>3</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="CLGD5446Video.cpp">
+      <Priority>8</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Cursor.cpp">
+      <Priority>2</Priority>
+      <AccessLevel>1</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="DebugConsole.cpp">
+      <Priority>6</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Desktop.cpp">
+      <Priority>7</Priority>
+      <AccessLevel>1</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="DMA.cpp">
+      <Priority>3</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="FAT.cpp">
+      <Priority>3</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="FileSys.cpp">
+      <Priority>3</Priority>
+      <AccessLevel>1</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="FillBenchmark.cpp">
+      <Priority>6</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Floppy.cpp">
+      <Priority>3</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Font.cpp">
+      <Priority>7</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="GeForceVideo.cpp">
+      <Priority>8</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Hello.cpp">
+      <Priority>6</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="i8042.cpp">
+      <Priority>0</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="KeApiTest.cpp">
+      <Priority>10</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="NE2000.cpp">
+      <Priority>2</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Network.cpp">
+      <Priority>3</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
     <ClCompile Include="OpNewDel.cpp" />
-    <ClCompile Include="Partition.cpp" />
-    <ClCompile Include="PCI.cpp" />
-    <ClCompile Include="PCIList.cpp" />
-    <ClCompile Include="ProcInfo.cpp" />
-    <ClCompile Include="PS2Keyb.cpp" />
-    <ClCompile Include="PS2Mouse.cpp" />
-    <ClCompile Include="Reboot.cpp" />
-    <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="Rtl8139.cpp" />
-    <ClCompile Include="S3Trio64Video.cpp" />
-    <ClCompile Include="SAnim.cpp" />
-    <ClCompile Include="Serial.cpp" />
-    <ClCompile Include="SerialMouse.cpp" />
+    <ClCompile Include="Partition.cpp">
+      <Priority>3</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="PCI.cpp">
+      <Priority>3</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="PCIList.cpp">
+      <Priority>6</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="ProcInfo.cpp">
+      <Priority>1</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="PS2Keyb.cpp">
+      <Priority>1</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="PS2Mouse.cpp">
+      <Priority>1</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Reboot.cpp">
+      <Priority>6</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Priority>9</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Rtl8139.cpp">
+      <Priority>2</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="S3Trio64Video.cpp">
+      <Priority>8</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="SAnim.cpp">
+      <Priority>6</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Serial.cpp">
+      <Priority>0</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="SerialMouse.cpp">
+      <Priority>1</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
     <ClCompile Include="String2.cpp" />
-    <ClCompile Include="SurfMgr.cpp" />
-    <ClCompile Include="SysInit.cpp" />
-    <ClCompile Include="Test.cpp" />
-    <ClCompile Include="VGAVideo.cpp" />
-    <ClCompile Include="Viewer.cpp" />
-    <ClCompile Include="VMwareMouse.cpp" />
-    <ClCompile Include="VMwareVideo.cpp" />
+    <ClCompile Include="SurfMgr.cpp">
+      <Priority>8</Priority>
+      <AccessLevel>1</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="SysInit.cpp">
+      <Priority>4</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Test.cpp">
+      <Priority>10</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="VGAVideo.cpp">
+      <Priority>8</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="Viewer.cpp">
+      <Priority>6</Priority>
+      <AccessLevel>2</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="VMwareMouse.cpp">
+      <Priority>1</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
+    <ClCompile Include="VMwareVideo.cpp">
+      <Priority>8</Priority>
+      <AccessLevel>0</AccessLevel>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="API.h" />
@@ -142,7 +228,73 @@
     <ClInclude Include="VideoStruct.h" />
     <ClInclude Include="VitrualKey.h" />
   </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <Target Name="EnvSetup">
+    <SetEnv Name="PATH" Value="$(ExecutablePath)" Prefix="false">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="Path" />
+    </SetEnv>
+    <SetEnv Name="INCLUDE" Value="$(IncludePath)" Prefix="false">
+      <Output TaskParameter="OutputEnvironmentVariable" PropertyName="INCLUDE" />
+    </SetEnv>
+    <ItemGroup>
+      <LinkableObj
+        Condition="'%(ClCompile.Priority)'!=''and'%(ClCompile.AccessLevel)'!=''"
+        Include="@(ClCompile ->'$(OutputPath)%(Filename).obj')"
+      />
+    </ItemGroup>
+    <ItemGroup>
+      <StrippableBin
+        Include="@(LinkableObj ->'$(OutputPath)%(Filename).bi_')"
+        />
+    </ItemGroup>
+  </Target>
+  <Target Name="Compile" DependsOnTargets="EnvSetup"
+          Inputs="@(ClCompile);@(ClInclude)"
+          Outputs="@(ClCompile ->'$(OutputPath)%(Filename).obj')">
+    <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
+    <CL Sources="%(ClCompile.Identity)"
+        SuppressStartupBanner="true"
+        RuntimeTypeInfo="false"
+        BufferSecurityCheck="false"
+        FunctionLevelLinking="true"
+        Optimization="Full"
+        OmitFramePointers="true"
+        IntrinsicFunctions="false"
+        FloatingPointModel="Fast"
+        ObjectFileName="$(OutputPath)"
+        AdditionalOptions="/Gs999999999" />
+  </Target>
+  <Target Name="Link" DependsOnTargets="EnvSetup"
+          Inputs="@(LinkableObj)"
+          Outputs="@(LinkableObj ->'$(OutputPath)%(Filename).bi_')">
+    <Link
+      Sources="%(LinkableObj.Identity);$(OutputPath)OpNewDel.obj;$(OutputPath)String2.obj;$(ProjectDir)*.obj"
+      SuppressStartupBanner="true"
+      IgnoreAllDefaultLibraries="true"
+      FixedBaseAddress="true"
+      OptimizeReferences="true"
+      EntryPointSymbol="Entry"
+      SubSystem="Windows"
+      OutputFile="$(OutputPath)%(LinkableObj.Filename).bi_"
+    />
+  </Target>
+  <Target Name="Strip"
+          Inputs="@(StrippableBin)"
+          Outputs="@(StrippableBin ->'$(OutputPath)%(Filename).bin')">
+    <Exec Command="$(ProjectDir)DriverStripper.exe %(StrippableBin.Identity) %(StrippableBin.Priority) %(StrippableBin.AccessLevel)" />
+  </Target>
+  <Target Name="Build" DependsOnTargets="EnvSetup;Compile;Link;Strip">
+    <MakeDir Directories="$(FloppyRootPath)" Condition="!Exists('$(FloppyRootPath)')" />
+    <MakeDir Directories="$(CDRootPath)" Condition="!Exists('$(CDRootPath)')" />
+    <Copy
+      SourceFiles="@(LinkableObj ->'$(OutputPath)%(Filename).bin')"
+      DestinationFolder="$(FloppyRootPath)\" />
+    <Copy
+      SourceFiles="@(LinkableObj ->'$(OutputPath)%(Filename).bin')"
+      DestinationFolder="$(CDRootPath)\" />
+    <Exec Command="$(ImagePath)Pack.bat" WorkingDirectory="$(ImagePath)" />
+  </Target>
+  <Target Name="Clean">
+    <Exec Command="del $(OutputPath)* /Q" />
+  </Target>
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
 </Project>

@@ -6,6 +6,7 @@
 #include "CRC32.h"
 
 #include <windows.h>
+#include "UnicodeConvert2.h"
 using namespace Lib;
 
 void main()
@@ -22,54 +23,23 @@ void main()
 	dword DataRawSize = 0;
 	dword DataRawOffset = 0;
 
-	CStringA S = GetCommandLineA();
- 
-	dword A = S.Find('(', 0);
-	if (A == -1)
+	int nArgs;
+	LPWSTR *szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
+
+	if (szArglist == NULL || nArgs < 4)
+	{
+		WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), "Error", 5, null, null);
 		return;
-	dword B = S.Find(')', A+1);
-	if (B == -1)
-		return;
+	}
 
-	CStringA XX = S.MidAbs(A+1, B);
-	XX.Trim(" \"");
-	if (XX == "")
-		return;
+	CStringA SourceFilename(CUnicodeConvert2().StringWToA(szArglist[1]));
 
-	dword AccessLevel = CDigitConvert().StringToDWord(XX._ptr());
+	dword priority = CDigitConvert().StringToDWord(
+		CUnicodeConvert2().StringWToA(szArglist[2])._ptr());
+	dword accessLevel = CDigitConvert().StringToDWord(
+		CUnicodeConvert2().StringWToA(szArglist[3])._ptr());
 
-	A = S.Find('|', 0);
-	if (A == -1)
-		return;
-	B = S.Find('|', A+1);
-	if (B == -1)
-		return;
-
-	CStringA Z = S.MidAbs(A+1, B);
-	Z.Trim(" \"");
-	if (Z == "")
-		return;
-
-	dword Priority = CDigitConvert().StringToDWord(Z._ptr());
-
-	S = S.Left(A);
-	S.Trim(" \"");
-
-	CStringA X;
-	dword SLen = S.Len();
-	for (dword i = SLen; i > 0; i--)
-		if (S.GetCh(i) == ' ')
-		{
-			X = S.RightAbs(i);
-			break;
-		}
-	X.Trim(" \"");
-	X.Trim(" \"");
-
-	if (X == "")
-		return;
-
-	CFile F(X._ptr(), Read);
+	CFile F(SourceFilename._ptr(), Read);
 	if (!F.IsOpened())
 		return;
 
@@ -154,9 +124,9 @@ void main()
 
 	dword Zer = 0;
 
-	X = X.Left(X.Find('.', 0));
-	X.Add(".bin");
-	CFile F2(X._ptr(), ReadWrite);
+	CStringA DestFilename = SourceFilename;
+	DestFilename.Replace("bi_", "bin");
+	CFile F2(DestFilename._ptr(), ReadWrite);
 	F2.Clear();
 	F2.Write(PB(Sign), 4);             // 0
 	F2.Write(PB(&Ver), 4);             // 4
@@ -166,8 +136,8 @@ void main()
 	F2.Write(PB(&RDataVSize), 4);      // 20
 	F2.Write(PB(&DataVSize), 4);       // 24
 	F2.Write(PB(&DataRawSize), 4);     // 28
-	F2.Write(PB(&Priority), 2);        // 32
-	F2.Write(PB(&AccessLevel), 2);     // 34
+	F2.Write(PB(&priority), 2);        // 32
+	F2.Write(PB(&accessLevel), 2);     // 34
 	F2.Write(Code, CodeVSize);         // 36
 	F2.Write(RData, RDataVSize);
 	F2.Write(Data, DataRawSize);

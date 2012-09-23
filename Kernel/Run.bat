@@ -1,2 +1,0 @@
-cd ..\Image\
-os.bxrc

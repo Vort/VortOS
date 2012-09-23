@@ -41,5 +41,8 @@
     <ClInclude Include="String2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UnicodeConvert2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

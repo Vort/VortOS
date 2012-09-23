@@ -100,6 +100,7 @@
     <ClInclude Include="DigitConvert.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="String2.h" />
+    <ClInclude Include="UnicodeConvert2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
