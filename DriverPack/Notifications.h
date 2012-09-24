@@ -4,20 +4,14 @@
 #include "Defs.h"
 
 // ----------------------------------------------------------------------------
-#define NfKe_IRQ0 0xE24DABB4 
-#define NfKe_IRQ1 0x81C8E411
-#define NfKe_IRQ4 0xC130AC48
-#define NfKe_IRQ6 0x068DD029
-#define NfKe_IRQ9 0xA714ECAC
-#define NfKe_IRQ11 0x704A32B0
-#define NfKe_IRQ12 0xD8E07352
+#define NfKe_Irq 0x7598B2C6
+#define NfKe_TimerTick 0xC47BA43B
 #define NfKe_ProcessExited 0x389DF145
 #define NfKe_TerminateProcess 0xDD41ACFB
 #define NfKe_ExceptionInfo 0x35B11433
 
 #define Nf_DebugOut 0x0612B45E
 
-#define NfTimer_Tick 0xC47BA43B
 #define NfKeyboard_SwitchLEDStatus 0x0009A7AB
 #define Nfi8043_KeyboardData 0x0104119E
 #define Nfi8043_MouseData 0xB33B6FA1

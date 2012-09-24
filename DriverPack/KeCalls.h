@@ -19,12 +19,6 @@ void GenericKeCall(dword FuncIndex, dword InDataSize, dword OutDataSize,
 }
 
 // ----------------------------------------------------------------------------
-void KeUnmaskIRQ(byte IRQ)
-{
-	GenericKeCall(1, 1, 0, &IRQ, 0);
-}
-
-// ----------------------------------------------------------------------------
 void KeExitProcess()
 {
 	GenericKeCall(2, 0, 0, 0, 0);
@@ -426,9 +420,9 @@ bool KeResetSymbol(dword Symbol)
 }
 
 // ----------------------------------------------------------------------------
-void KeEndOfInterrupt(dword IRQ)
+void KeEndOfInterrupt(byte irq)
 {
-	GenericKeCall(47, 4, 0, PB(&IRQ), 0);
+	GenericKeCall(47, 1, 0, &irq, 0);
 }
 
 // ----------------------------------------------------------------------------
@@ -449,5 +443,17 @@ byte* KeAllocLinearBlock(dword pageCount)
 	dword virtBase;
 	GenericKeCall(50, 4, 4, (byte*)(&pageCount), (byte*)(&virtBase));
 	return (byte*)virtBase;
+}
+
+// ----------------------------------------------------------------------------
+void KeLinkIrq(byte irq)
+{
+	GenericKeCall(51, 1, 0, &irq, 0);
+}
+
+// ----------------------------------------------------------------------------
+void KeNop()
+{
+	GenericKeCall(52, 0, 0, 0, 0);
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

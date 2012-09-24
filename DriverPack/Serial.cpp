@@ -9,9 +9,8 @@ public:
 	CSerial()
 	{
 		dword PortBase = 0x3F8;
-		KeEnableNotification(NfKe_IRQ4);
+		KeLinkIrq(4);
 		KeEnableNotification(NfKe_TerminateProcess);
-		KeUnmaskIRQ(4);
 
 		KeOutPortByte(PortBase + 1, 0x00); // Int Off
 		KeOutPortByte(PortBase + 3, 0x80); // DLAB On
@@ -31,7 +30,7 @@ public:
 			KeWaitFor(1);
 			N.Recv();
 			
-			if (N.GetID() == NfKe_IRQ4)
+			if (N.GetID() == NfKe_Irq)
 			{
 				byte B = KeInPortByte(PortBase);
 				KeNotify(NfCom_Data, &B, 1);
@@ -70,6 +69,4 @@ void Entry()
 // outportb(PORT1 + 3 , 0x03);  /* 8 Bits, No Parity, 1 Stop Bit */
 // outportb(PORT1 + 2 , 0xC7);  /* FIFO Control Register */
 // outportb(PORT1 + 4 , 0x0B);  /* Turn on DTR, RTS, and OUT2 */
-
-
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

@@ -86,6 +86,7 @@ private:
 	byte bus;
 	byte device;
 	byte function;
+	byte irq;
 
 	bool initDone;
 	dword baseAddress;
@@ -109,18 +110,15 @@ public:
 		nextReceiveIndex = 0;
 		nextTransmitIndex = 0;
 
-		KeUnmaskIRQ(9);
-		KeEnableNotification(NfKe_IRQ9);
 		KeEnableNotification(NfNetwork_SendPacket);
 		KeEnableCallRequest(ClNetwork_GetSelfMACAddress);
 
 		// Get I/O base address
 		baseAddress = ReadPCIConfDword(bus, device, function, 0x10) & ~0x3;
 
-		// Check IRQ number
-		byte irq = ReadPCIConfByte(bus, device, function, 0x3C);
-		if (irq != 0x09) // hack
-			return;
+		// Link IRQ
+		irq = ReadPCIConfByte(bus, device, function, 0x3C);
+		KeLinkIrq(irq);
 
 		// Enable bus mastering
 		word cmdReg = ReadPCIConfWord(bus, device, function, 0x04);
@@ -201,9 +199,9 @@ public:
 			for (dword z = 0; z < NfCount; z++)
 			{
 				N.Recv();
-				if (N.GetID() == NfKe_IRQ9)
+				if (N.GetID() == NfKe_Irq)
 				{
-					ProcessIRQ9();
+					ProcessIrq();
 				}
 				else if (N.GetID() == NfNetwork_SendPacket)
 				{
@@ -236,7 +234,7 @@ public:
 		}
 	}
 
-	void ProcessIRQ9()
+	void ProcessIrq()
 	{
 		if (!initDone)
 		{
@@ -286,7 +284,7 @@ public:
 			}
 		}
 		
-		KeEndOfInterrupt(9);
+		KeEndOfInterrupt(irq);
 	}
 
 	dword ReadCSR(byte index)
@@ -325,6 +323,9 @@ public:
 // ----------------------------------------------------------------------------
 void Entry()
 {
+	if (!KeSetSymbol(Sm_Lock_AM79C970))
+		return;
+
 	Am79C970 am79C970;
 }
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

@@ -63,9 +63,9 @@ public:
 		}
 		CreateProcess("PCI.bin");
 		CreateProcess("Network.bin");
-		//CreateProcess("NE2000.bin");
-		//CreateProcess("Am79C970.bin");
-		//CreateProcess("Rtl8139.bin");
+		CreateProcess("NE2000.bin");
+		CreateProcess("Am79C970.bin");
+		CreateProcess("Rtl8139.bin");
 
 		char* videoDrvList[] =
 		{

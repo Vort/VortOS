@@ -47,6 +47,8 @@
 #define Sm_Lock_Floppy    0x073CD70D
 #define Sm_Lock_i8042     0x5FC779E1
 #define Sm_Lock_NE2000    0x16B7AB3C
+#define Sm_Lock_RTL8139   0xE0D476CB
+#define Sm_Lock_AM79C970  0x54839F6C
 #define Sm_Lock_SysInit   0x23A54B79
 #define Sm_Lock_DbgCons   0x39047190
 #define Sm_Lock_Ps2Keyb   0x7761238D

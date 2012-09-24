@@ -31,6 +31,7 @@ private:
 	byte bus;
 	byte device;
 	byte function;
+	byte irq;
 
 	byte hwVersionId;
 	dword baseAddress;
@@ -51,18 +52,15 @@ public:
 		nextRecvOffset = 0;
 		nextTransmitIndex = 0;
 
-		KeUnmaskIRQ(11);
-		KeEnableNotification(NfKe_IRQ11);
 		KeEnableNotification(NfNetwork_SendPacket);
 		KeEnableCallRequest(ClNetwork_GetSelfMACAddress);
 
 		// Get I/O base address
 		baseAddress = ReadPCIConfDword(bus, device, function, 0x10) & ~0x3;
 
-		// Check IRQ number
-		byte irq = ReadPCIConfByte(bus, device, function, 0x3C);
-		if (irq != 11) // hack
-			return;
+		// Link IRQ
+		irq = ReadPCIConfByte(bus, device, function, 0x3C);
+		KeLinkIrq(irq);
 
 		// Reset controller
 		WriteRegisterByte(0x37, 1 << 4);
@@ -138,9 +136,9 @@ public:
 			for (dword z = 0; z < NfCount; z++)
 			{
 				N.Recv();
-				if (N.GetID() == NfKe_IRQ11)
+				if (N.GetID() == NfKe_Irq)
 				{
-					ProcessIRQ11();
+					ProcessIrq();
 				}
 				else if (N.GetID() == NfNetwork_SendPacket)
 				{
@@ -181,7 +179,7 @@ public:
 		}
 	}
 
-	void ProcessIRQ11()
+	void ProcessIrq()
 	{
 		word isr = ReadRegisterWord(0x3E);
 
@@ -203,7 +201,7 @@ public:
 			WriteRegisterWord(0x3E, 1 << 0);
 		}
 
-		KeEndOfInterrupt(11);
+		KeEndOfInterrupt(irq);
 	}
 
 	byte ReadRegisterByte(byte index)
@@ -248,6 +246,9 @@ public:
 // ----------------------------------------------------------------------------
 void Entry()
 {
+	if (!KeSetSymbol(Sm_Lock_RTL8139))
+		return;
+
 	Rtl8139 rtl8139;
 }
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

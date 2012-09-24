@@ -56,7 +56,7 @@ public:
 		OutText(m_SurfaceID, m_Margin+104, m_Margin*2 + m_FontH * 3, 0xFF20A0A0, "Krn");
 		OutText(m_SurfaceID, m_Margin+128, m_Margin*2 + m_FontH * 3, 0xFFA02020, "Name");
 
-		KeEnableNotification(NfKe_IRQ0);
+		KeEnableNotification(NfKe_TimerTick);
 		KeEnableNotification(Nf_SurfaceActivated);
 		KeEnableNotification(NfKe_TerminateProcess);
 
@@ -87,7 +87,7 @@ public:
 					}
 				}
 			}
-			else if (N.GetID() == NfKe_IRQ0)
+			else if (N.GetID() == NfKe_TimerTick)
 			{
 				if (m_TickCount % 144 == 0)
 				{

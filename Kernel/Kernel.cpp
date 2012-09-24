@@ -48,6 +48,8 @@ CKernel::CKernel(CTask& KernelTask, CPhysMemManager& PMM, CIntManager& IM,
 	m_KeCallOutDataBuf = PMM.AllocBlock(8);
 	m_TempBuf = PMM.AllocBlock(4);
 
+	for (int i = 0; i < 16; i++)
+		m_IrqLinks[i] = null;
 	for (dword i = 0; i < 4096; i++)
 		m_ServiceFuncPage[i] = 0xCC; // int3
 	for (dword i = 0; i < sizeof(g_ServiceFuncPageData); i++)
@@ -119,6 +121,10 @@ void CKernel::RemoveActiveThread()
 {
 	if (m_ActiveThread)
 	{
+		for (int i = 0; i < 16; i++)
+			if (m_IrqLinks[i] == m_ActiveThread)
+				m_IrqLinks[i] = null;
+
 		dword ActiveThreadID = m_ActiveThread->GetID();
 		BroadcastNotification(0, NfKe_ProcessExited, 4, CUniPtr(PB(&ActiveThreadID)));
 
@@ -138,17 +144,6 @@ CThread* CKernel::GetThreadWithID(dword ID)
 			return T;
 	}
 	return null;
-}
-
-// ----------------------------------------------------------------------------
-void CKernel::OnKeUnmaskIRQ()
-{
-	if (m_KeCallInDataSize != 1) return;
-	if (m_KeCallOutDataSize != 0) return;
-
-	byte IRQ = m_KeCallInDataBuf[0];
-	if (IRQ < 0x10)
-		m_IM.UnmaskIRQ(IRQ);
 }
 
 // ----------------------------------------------------------------------------
@@ -891,11 +886,15 @@ void CKernel::OnKeResetSymbol()
 // ----------------------------------------------------------------------------
 void CKernel::OnKeEndOfInterrupt()
 {
-	if (m_KeCallInDataSize != 4) return;
+	if (m_KeCallInDataSize != 1) return;
 	if (m_KeCallOutDataSize != 0) return;
 
-	dword IRQ = ((dword*)m_KeCallInDataBuf)[0];
-	m_IM.EndOfInterrupt(IRQ);
+	byte irq = m_KeCallInDataBuf[0];
+	if (irq >= 16)
+		return;
+
+	if (m_IrqLinks[irq] == m_ActiveThread)
+		m_IM.EndOfInterrupt(irq);
 }
 
 // ----------------------------------------------------------------------------
@@ -938,12 +937,39 @@ void CKernel::OnKeAllocLinearBlock()
 }
 
 // ----------------------------------------------------------------------------
+void CKernel::OnKeLinkIrq()
+{
+	if (m_KeCallInDataSize != 1) return;
+	if (m_KeCallOutDataSize != 0) return;
+
+	byte irq = m_KeCallInDataBuf[0];
+
+	// Reserved for kernel
+	if (irq == 0)
+		return;
+	if (irq >= 16)
+		return;
+
+	if (m_IrqLinks[irq] == null)
+	{
+		m_IrqLinks[irq] = m_ActiveThread;
+		m_ActiveThread->EnableNotification(NfKe_Irq);
+		m_IM.UnmaskIRQ(irq);
+	}
+}
+
+// ----------------------------------------------------------------------------
+void CKernel::OnKeNop()
+{
+	return;
+}
+
+// ----------------------------------------------------------------------------
 void CKernel::OnKeCall(dword FunctionIndex)
 {
 	m_KeCallRealOutDataSize = m_KeCallOutDataSize;
 	switch (FunctionIndex)
 	{
-	case 1: OnKeUnmaskIRQ(); break;
 	case 2: OnKeExitProcess(); break;
 	case 3: OnKeRequestReboot(); break;
 	case 4: OnKeEnableNotification(); break;
@@ -988,6 +1014,8 @@ void CKernel::OnKeCall(dword FunctionIndex)
 	case 48: OnKeSetGeneralProtectionExceptionHandler(); break;
 	case 49: OnKeUnmapSharedMem(); break;
 	case 50: OnKeAllocLinearBlock(); break;
+	case 51: OnKeLinkIrq(); break;
+	case 52: OnKeNop(); break;
 	}
 }
 
@@ -1026,26 +1054,26 @@ bool CKernel::HasSymbol(dword Symbol)
 }
 
 // ----------------------------------------------------------------------------
-void CKernel::ProcessHWIntRequest(dword Index)
+void CKernel::ProcessHWIntRequest(dword index)
 {
-	if (Index == -1) return;
+	if (index == -1) return;
 
-	if ((Index >= 0) && (Index <= 0x1F))
+	if ((index >= 0) && (index <= 0x1F))
 	{
 		CThread* T = m_ActiveThread;
-		if (Index == 7)
+		if (index == 7)
 		{
 			T->SetFPUStateChange();
 		}
 		else
 		{
 			bool fail = true;
-			if ((Index == 0xD) && (T->GetGPEHandler() != 0))
+			if ((index == 0xD) && (T->GetGPEHandler() != 0))
 				fail = false;
 			if (fail)
 			{
 				(PD(m_TempBuf))[0] = T->GetID();
-				(PD(m_TempBuf))[1] = Index;
+				(PD(m_TempBuf))[1] = index;
 				(PD(m_TempBuf))[2] = *PD(&T->GetRing0Stack()[0xFEC]);
 
 				const CFString<128>& Name = T->GetName();
@@ -1063,30 +1091,25 @@ void CKernel::ProcessHWIntRequest(dword Index)
 			}
 		}
 	}
-	else if (Index == 0x20)
+	else if ((index >= 0x20) && (index <= 0x2F))
 	{
-		m_TickCount++;
-		for (m_TL.ToFirstElement(); !m_TL.IsAtLastDummy(); m_TL.ToNextElement())
-			m_TL.GetCurrentElement()->OnTick(m_TickCount);
+		byte irq = index - 0x20;
+		if (irq == 0)
+		{
+			m_TickCount++;
+			for (m_TL.ToFirstElement(); !m_TL.IsAtLastDummy(); m_TL.ToNextElement())
+				m_TL.GetCurrentElement()->OnTick(m_TickCount);
 
-		if (m_IsRebootActivated)
-			ProcessReboot();
+			if (m_IsRebootActivated)
+				ProcessReboot();
 
-		BroadcastNotification(0, NfKe_IRQ0);
-		m_IM.EndOfInterrupt(0);
+			BroadcastNotification(0, NfKe_TimerTick);
+
+			m_IM.EndOfInterrupt(0);
+		}
+		if (m_IrqLinks[irq] != null)
+			m_IrqLinks[irq]->AddNotification(0, NfKe_Irq, 1, CUniPtr(&irq));
 	}
-	else if (Index == 0x21)
-		BroadcastNotification(0, NfKe_IRQ1);
-	else if (Index == 0x24)
-		BroadcastNotification(0, NfKe_IRQ4);
-	else if (Index == 0x26)
-		BroadcastNotification(0, NfKe_IRQ6);
-	else if (Index == 0x29)
-		BroadcastNotification(0, NfKe_IRQ9);
-	else if (Index == 0x2B)
-		BroadcastNotification(0, NfKe_IRQ11);
-	else if (Index == 0x2C)
-		BroadcastNotification(0, NfKe_IRQ12);
 }
 
 // ----------------------------------------------------------------------------

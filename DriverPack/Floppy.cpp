@@ -64,10 +64,9 @@ public:
 		KeWaitForSymbol(SmDMA_Ready);
 		KeWaitForSymbol(SmCache_Ready);
 		KeWaitForSymbol(SmFileSystem_Ready);
-		KeEnableNotification(NfKe_IRQ0);
-		KeEnableNotification(NfKe_IRQ6);
+		KeEnableNotification(NfKe_TimerTick);
 		KeEnableNotification(NfKe_TerminateProcess);
-		KeUnmaskIRQ(6);
+		KeLinkIrq(6);
 
 		m_IsInResetState = false;
 		m_Drives[0].EnableMotor();
@@ -110,7 +109,7 @@ public:
 			for (dword z = 0; z < NfCount; z++)
 			{
 				N.Recv();
-				if (N.GetID() == NfKe_IRQ0)
+				if (N.GetID() == NfKe_TimerTick)
 				{
 					m_Drives[0].IncrementMotorIdleTime();
 					if (m_Drives[0].GetMotorIdleTime() > 18 * 4)
@@ -263,7 +262,7 @@ public:
 		{
 			KeWaitFor(1);
 			N.Recv();
-			if (N.GetID() == NfKe_IRQ6)
+			if (N.GetID() == NfKe_Irq)
 			{
 				KeEndOfInterrupt(6);
 				break;

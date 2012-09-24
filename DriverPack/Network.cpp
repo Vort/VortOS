@@ -121,13 +121,13 @@ public:
 		memset(selfIp, 0x00, 4);
 		memset(dhcpSrvIp, 0x00, 4);
 
-		KeEnableNotification(NfKe_IRQ0);
 		KeEnableNotification(NfNetwork_RecvdPacket);
 
 		KeSetSymbol(SmNetwork_Waiting);
 		KeWaitForSymbol(SmNetwork_Ready);
 		KeRequestCall(ClNetwork_GetSelfMACAddress, null, 0, selfMac, 6);
 
+		KeEnableNotification(NfKe_TimerTick);
 		dhcpXId = GetRandomDword();
 		SendDhcpDiscover();
 
@@ -140,11 +140,17 @@ public:
 			for (dword z = 0; z < NfCount; z++)
 			{
 				N.Recv();
-				if (N.GetID() == NfKe_IRQ0)
+				if (N.GetID() == NfKe_TimerTick)
 				{
 					if (IsIpEqual(dhcpSrvIp, zeroIp))
+					{
 						if (KeGetTime() - discoverTime >= 5000)
 							SendDhcpDiscover();
+					}
+					else
+					{
+						KeDisableNotification(NfKe_TimerTick);
+					}
 				}
 				else if (N.GetID() == NfNetwork_RecvdPacket)
 				{

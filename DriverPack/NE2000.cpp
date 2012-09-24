@@ -21,8 +21,7 @@ public:
 		sending = false;
 		nextPacketPage = 0x48;
 
-		KeUnmaskIRQ(9);
-		KeEnableNotification(NfKe_IRQ9);
+		KeLinkIrq(9);
 		KeEnableNotification(NfNetwork_SendPacket);
 		KeEnableCallRequest(ClNetwork_GetSelfMACAddress);
 
@@ -78,7 +77,7 @@ public:
 			for (dword z = 0; z < NfCount; z++)
 			{
 				N.Recv();
-				if (N.GetID() == NfKe_IRQ9)
+				if (N.GetID() == NfKe_Irq)
 				{
 					ProcessIRQ9();
 				}

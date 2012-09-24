@@ -12,11 +12,10 @@ public:
 		m_IsNumActive = false;
 		m_IsCapsActive = false;
 
-		KeUnmaskIRQ(1);
-		KeUnmaskIRQ(12);
-		KeEnableNotification(NfKe_IRQ0);
-		KeEnableNotification(NfKe_IRQ1);
-		KeEnableNotification(NfKe_IRQ12);
+		KeLinkIrq(1);
+		KeLinkIrq(12);
+		KeEnableNotification(NfKe_Irq);
+		KeEnableNotification(NfKe_TimerTick);
 		KeEnableNotification(NfKe_TerminateProcess);
 		KeEnableNotification(NfKeyboard_SwitchLEDStatus);
 
@@ -31,45 +30,48 @@ public:
 			for (dword z = 0; z < NfCount; z++)
 			{
 				N.Recv();
-				if (N.GetID() == NfKe_IRQ0)
+				if (N.GetID() == NfKe_TimerTick)
 				{
 					m_TimeoutTimer++;
 					if (m_TimeoutTimer >= 20)
 					{
-						KeDisableNotification(NfKe_IRQ0);
+						KeDisableNotification(NfKe_TimerTick);
 						//DebugOut("[MouseInitTimeout]", 18);
 						KeInPortByte(0x60);
 						m_IsInitFinished = true;
 					}
 				}
-				else if (N.GetID() == NfKe_IRQ1)
+				else if (N.GetID() == NfKe_Irq)
 				{
-					byte D = KeInPortByte(0x60);
+					if (N.GetByte(0) == 1)
+					{
+						byte D = KeInPortByte(0x60);
 
-					//DebugOut("[fK:", 4);
-					//DebugOut(D);
-					//DebugOut("]", 1);
+						//DebugOut("[fK:", 4);
+						//DebugOut(D);
+						//DebugOut("]", 1);
 
-					OnKeybByte(D);
-					KeEndOfInterrupt(1);
-				}
-				else if (N.GetID() == NfKe_IRQ12)
-				{
-					bool M = false;
-					if (KeInPortByte(0x64) & 0x20)
-						M = true;
-					byte D = KeInPortByte(0x60);
+						OnKeybByte(D);
+						KeEndOfInterrupt(1);
+					}
+					else if (N.GetByte(0) == 12)
+					{
+						bool M = false;
+						if (KeInPortByte(0x64) & 0x20)
+							M = true;
+						byte D = KeInPortByte(0x60);
 
-					//if (M)
-					//	DebugOut("[fM:", 4);
-					//else
-					//	DebugOut("[fm:", 4);
-					//DebugOut(D);
-					//DebugOut("]", 1);
+						//if (M)
+						//	DebugOut("[fM:", 4);
+						//else
+						//	DebugOut("[fm:", 4);
+						//DebugOut(D);
+						//DebugOut("]", 1);
 
-					if (M)
-						OnMouseByte(D);
-					KeEndOfInterrupt(12);
+						if (M)
+							OnMouseByte(D);
+						KeEndOfInterrupt(12);
+					}
 				}
 				else if (N.GetID() == NfKeyboard_SwitchLEDStatus)
 				{
@@ -133,7 +135,7 @@ public:
 	{
 		if (!m_IsInitFinished)
 		{
-			KeDisableNotification(NfKe_IRQ0);
+			KeDisableNotification(NfKe_TimerTick);
 			m_IsInitFinished = true;
 			return;
 		}

@@ -113,6 +113,8 @@ public:
 	void OnKeSetGeneralProtectionExceptionHandler();
 	void OnKeUnmapSharedMem();
 	void OnKeAllocLinearBlock();
+	void OnKeLinkIrq();
+	void OnKeNop();
 
 private:
 	dword m_TickCount;
@@ -143,6 +145,7 @@ private:
 	dword m_KeCallRealOutDataSize;
 
 	CThread* m_ActiveThread;
+	CThread* m_IrqLinks[16];
 	CList<CThread> m_TL;
 
 	CArray<dword> m_Symbols;

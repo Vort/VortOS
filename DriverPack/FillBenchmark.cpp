@@ -33,7 +33,7 @@ void Entry()
 	FillSurface(SurfID, 0xFFFFFFFF);
 	ShowSurface(SurfID);
 
-	KeEnableNotification(NfKe_IRQ0);
+	KeEnableNotification(NfKe_TimerTick);
 	KeEnableNotification(NfKe_TerminateProcess);
 	KeEnableNotification(Nf_VirtualKey);
 
@@ -89,7 +89,7 @@ void Entry()
 		for (dword i = 0; i < NfCount; i++)
 		{
 			Nf.Recv();
-			if (Nf.GetID() == NfKe_IRQ0)
+			if (Nf.GetID() == NfKe_TimerTick)
 			{
 				Ticks++;
 
