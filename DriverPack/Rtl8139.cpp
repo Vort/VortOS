@@ -53,6 +53,7 @@ public:
 		nextTransmitIndex = 0;
 
 		KeEnableNotification(NfNetwork_SendPacket);
+		KeEnableNotification(NfKe_TerminateProcess);
 		KeEnableCallRequest(ClNetwork_GetSelfMACAddress);
 
 		// Get I/O base address
@@ -115,7 +116,7 @@ public:
 		// Accept physical match
 		WriteRegisterDword(0x44, (1 << 7) | (1 << 3) | (1 << 1));
 
-		// Enable transmit ok interrupt, receive ok interrupt
+		// Unmask transmit ok interrupt, receive ok interrupt
 		WriteRegisterWord(0x3C, (1 << 2) | (1 << 0));
 
 		// Clear missed packet counter
@@ -166,6 +167,14 @@ public:
 					{
 						DebugOut("[tskip]", 7);
 					}
+				}
+				else if (N.GetID() == NfKe_TerminateProcess)
+				{
+					// Disable transmitter and receiver
+					WriteRegisterByte(0x37, 0);
+					// Mask all interrupts
+					WriteRegisterWord(0x3C, 0);
+					return;
 				}
 			}
 			for (dword z = 0; z < CallCount; z++)

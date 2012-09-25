@@ -122,8 +122,13 @@ void CKernel::RemoveActiveThread()
 	if (m_ActiveThread)
 	{
 		for (int i = 0; i < 16; i++)
+		{
 			if (m_IrqLinks[i] == m_ActiveThread)
+			{
 				m_IrqLinks[i] = null;
+				m_IM.MaskIRQ(i);
+			}
+		}
 
 		dword ActiveThreadID = m_ActiveThread->GetID();
 		BroadcastNotification(0, NfKe_ProcessExited, 4, CUniPtr(PB(&ActiveThreadID)));

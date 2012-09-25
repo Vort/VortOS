@@ -111,6 +111,7 @@ public:
 		nextTransmitIndex = 0;
 
 		KeEnableNotification(NfNetwork_SendPacket);
+		KeEnableNotification(NfKe_TerminateProcess);
 		KeEnableCallRequest(ClNetwork_GetSelfMACAddress);
 
 		// Get I/O base address
@@ -221,6 +222,12 @@ public:
 					{
 						DebugOut("[tskip]", 7);
 					}
+				}
+				else if (N.GetID() == NfKe_TerminateProcess)
+				{
+					// STOP = 1
+					WriteCSR(0, 1 << 2);
+					return;
 				}
 			}
 			for (dword z = 0; z < CallCount; z++)

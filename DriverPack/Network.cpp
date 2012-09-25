@@ -103,6 +103,7 @@ private:
 	dword dhcpXId;
 	byte dhcpSrvIp[4];
 	dword discoverTime;
+	dword secsElapsed;
 
 	byte broadcastIp[4];
 	byte broadcastMac[6];
@@ -114,6 +115,7 @@ private:
 public:
 	Network()
 	{
+		secsElapsed = 0;
 		memset(broadcastIp, 0xFF, 4);
 		memset(broadcastMac, 0xFF, 6);
 		memset(zeroMac, 0x00, 6);
@@ -122,6 +124,7 @@ public:
 		memset(dhcpSrvIp, 0x00, 4);
 
 		KeEnableNotification(NfNetwork_RecvdPacket);
+		KeEnableNotification(NfKe_TerminateProcess);
 
 		KeSetSymbol(SmNetwork_Waiting);
 		KeWaitForSymbol(SmNetwork_Ready);
@@ -145,7 +148,10 @@ public:
 					if (IsIpEqual(dhcpSrvIp, zeroIp))
 					{
 						if (KeGetTime() - discoverTime >= 5000)
+						{
+							secsElapsed += 5;
 							SendDhcpDiscover();
+						}
 					}
 					else
 					{
@@ -155,6 +161,10 @@ public:
 				else if (N.GetID() == NfNetwork_RecvdPacket)
 				{
 					ProcessPacket(N.GetBuf(), N.GetSize());
+				}
+				else if (N.GetID() == NfKe_TerminateProcess)
+				{
+					return;
 				}
 			}
 		}
@@ -539,7 +549,7 @@ public:
 		dhcp->HLen = 0x06;
 		dhcp->Hops = 0x00;
 		dhcp->XId = dhcpXId;
-		dhcp->Secs = 0x0000;
+		dhcp->Secs = SwapWord(secsElapsed);
 		dhcp->Flags = 0x0000;
 		WriteMac(dhcp->CHAddr, selfMac);
 		dhcp->Magic = 0x63538263;

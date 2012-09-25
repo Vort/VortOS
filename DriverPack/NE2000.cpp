@@ -23,6 +23,7 @@ public:
 
 		KeLinkIrq(9);
 		KeEnableNotification(NfNetwork_SendPacket);
+		KeEnableNotification(NfKe_TerminateProcess);
 		KeEnableCallRequest(ClNetwork_GetSelfMACAddress);
 
 		// page = 1, no DMA, start
@@ -91,6 +92,12 @@ public:
 					{
 						DebugOut("[tskip]", 7);
 					}
+				}
+				else if (N.GetID() == NfKe_TerminateProcess)
+				{
+					// page = 0, no DMA, stop
+					WriteRegisterByte(0x0, 0x01); //CR
+					return;
 				}
 			}
 			for (dword z = 0; z < CallCount; z++)

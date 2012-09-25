@@ -125,6 +125,24 @@ void CIntManager::UnmaskIRQ(dword IRQ)
 }
 
 // ----------------------------------------------------------------------------
+void CIntManager::MaskIRQ(dword IRQ)
+{
+	dword Index = IRQ;
+	dword IndexT = Index & 0x7;
+
+	if (Index & 0x8) // PIC2
+	{
+		SetBit(m_PIC2Mask, IndexT);
+		_outp(0xA1, m_PIC2Mask);
+	}
+	else // PIC1
+	{
+		SetBit(m_PIC1Mask, IndexT);
+		_outp(0x21, m_PIC1Mask);
+	}
+}
+
+// ----------------------------------------------------------------------------
 void CIntManager::EndOfInterrupt(dword IRQ)
 {
 	if (IRQ < 16)
