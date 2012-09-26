@@ -84,18 +84,23 @@ CThread::CThread(CPhysMemManager& PMM, CGDT& GDT, dword KernelTaskStateBase,
 		(byte*)(CMemMap::c_R0StackVBase),
 		(dword)(&m_VMM->GetPD()));
 
-	dword TSPart1 = dword(&m_Task->GetTSS().GetTaskState()) & ~0xFFF;
-	dword TSPart2 = TSPart1 + 0x1000;
-	m_VMM->MapPageAt(TSPart1, TSPart1, true);
-	if (TSPart2 != GDTBase)
-		m_VMM->MapPageAt(TSPart2, TSPart2, true);
+	dword tss1Start = (dword)&m_Task->GetTSS().GetTaskState();
+	dword tss2Start = KernelTaskStateBase;
+	dword tss1End = tss1Start + sizeof(CTaskState) - 1;
+	dword tss2End = tss2Start + sizeof(CTaskState) - 1;
+	dword tss1StartPage = tss1Start & ~0xFFF;
+	dword tss2StartPage = tss2Start & ~0xFFF;
+	dword tss1EndPage = tss1End & ~0xFFF;
+	dword tss2EndPage = tss2End & ~0xFFF;
 
-	dword TSPart3 = KernelTaskStateBase & ~0xFFF;
-	dword TSPart4 = TSPart3 + 0x1000;
-	if ((TSPart3 != TSPart1) && (TSPart3 != TSPart2))
-		m_VMM->MapPageAt(TSPart3, TSPart3, true);
-	if ((TSPart4 != TSPart1) && (TSPart4 != TSPart2))
-		m_VMM->MapPageAt(TSPart4, TSPart4, true);
+	if (!m_VMM->IsMapped(tss1StartPage))
+		m_VMM->MapPageAt(tss1StartPage, tss1StartPage, true);
+	if (!m_VMM->IsMapped(tss1EndPage))
+		m_VMM->MapPageAt(tss1EndPage, tss1EndPage, true);
+	if (!m_VMM->IsMapped(tss2StartPage))
+		m_VMM->MapPageAt(tss2StartPage, tss2StartPage, true);
+	if (!m_VMM->IsMapped(tss2EndPage))
+		m_VMM->MapPageAt(tss2EndPage, tss2EndPage, true);
 
 	m_Task->SetInterrupts(true);
 }

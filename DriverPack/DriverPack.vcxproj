@@ -277,7 +277,7 @@
       OutputFile="$(OutputPath)%(LinkableObj.Filename).bi_"
     />
   </Target>
-  <Target Name="Strip"
+  <Target Name="Strip" DependsOnTargets="EnvSetup"
           Inputs="@(StrippableBin)"
           Outputs="@(StrippableBin ->'$(OutputPath)%(Filename).bin')">
     <Exec Command="$(ProjectDir)DriverStripper.exe %(StrippableBin.Identity) %(StrippableBin.Priority) %(StrippableBin.AccessLevel)" />

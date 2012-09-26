@@ -30,6 +30,19 @@ public:
 		return m_AllocatedPages.Size();
 	}
 
+	bool IsMapped(dword virtAddr)
+	{
+		dword pdeIndex = m_PD->ConvertBaseToPDEIndex(virtAddr);
+		dword pteIndex = m_PD->ConvertBaseToPTEIndex(virtAddr);
+		CPDE& pde = m_PD->GetPDE(pdeIndex);
+		if (!pde.IsPresent())
+			return false;
+		CPTE& pte = pde.GetPT().GetPTE(pteIndex);
+		if (!pte.IsPresent())
+			return false;
+		return true;
+	}
+
 	void MapPageAt(dword physBase, dword virtBase, bool isWriteEnabled)
 	{
 		ErrIf(physBase & 0xFFF);
