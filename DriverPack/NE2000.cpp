@@ -6,7 +6,12 @@
 class NE2000
 {
 private:
+	byte bus;
+	byte device;
+	byte function;
+	byte irq;
 	dword baseAddress;
+
 	byte macAddr[6];
 	word packetBuf[1024];
 	bool sending;
@@ -21,10 +26,16 @@ public:
 		sending = false;
 		nextPacketPage = 0x48;
 
-		KeLinkIrq(9);
 		KeEnableNotification(NfNetwork_SendPacket);
 		KeEnableNotification(NfKe_TerminateProcess);
 		KeEnableCallRequest(ClNetwork_GetSelfMACAddress);
+
+		// Get I/O base address
+		baseAddress = ReadPCIConfDword(bus, device, function, 0x10) & ~0x3;
+
+		// Link IRQ
+		irq = ReadPCIConfByte(bus, device, function, 0x3C);
+		KeLinkIrq(irq);
 
 		// page = 1, no DMA, start
 		WriteRegisterByte(0x0, 0x62); // CR
@@ -80,7 +91,7 @@ public:
 				N.Recv();
 				if (N.GetID() == NfKe_Irq)
 				{
-					ProcessIRQ9();
+					ProcessIrq();
 				}
 				else if (N.GetID() == NfNetwork_SendPacket)
 				{
@@ -111,7 +122,7 @@ public:
 		}
 	}
 
-	void ProcessIRQ9()
+	void ProcessIrq()
 	{
 		byte isr = ReadRegisterByte(0x7);
 		if (isr & 0x01) // rx
@@ -149,7 +160,7 @@ public:
 			sending = false;
 			WriteRegisterByte(0x7, 0x02);
 		}
-		KeEndOfInterrupt(9);
+		KeEndOfInterrupt(irq);
 	}
 
 	void SendPacket(byte* data, int len)
@@ -185,14 +196,8 @@ public:
 	bool Detect()
 	{
 		KeWaitForSymbol(SmPCI_Ready);
-
-		byte bus;
-		byte device;
-		byte function;
 		if (!GetPCIDeviceByID(0x10EC, 0x8029, bus, device, function))
 			return false;
-
-		baseAddress = ReadPCIConfDword(bus, device, function, 0x10) & ~0x3;
 		return true;
 	}
 };
