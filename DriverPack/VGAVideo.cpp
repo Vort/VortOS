@@ -177,7 +177,7 @@ private:
 	const byte* m_FrameBuf;
 	byte* m_ShadowBuf;
 	volatile byte* m_VGABuf;
-	CRandom m_Rand;
+	Random m_Rand;
 
 private:
 	void InitVGA()

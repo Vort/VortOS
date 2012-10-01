@@ -38,7 +38,7 @@ void Entry()
 	KeEnableNotification(Nf_VirtualKey);
 
 	dword T;
-	CRandom R;
+	Random R;
 	for (;;)
 	{
 		dword X1 = R.GetNextWord() % (W - 8) + 4;
