@@ -82,7 +82,11 @@ public:
 		WriteDR(0xDF); /* steprate = 3ms, unload time = 240ms */
 		WriteDR(0x02); /* load time = 16ms, no-DMA = 0 */
 
-		CmdRecalibrate();
+		if (!CmdRecalibrate())
+		{
+			// Drive #0 detection failed
+			return;
+		}
 
 		KeEnableCallRequest(ClFloppy_ReadSector);
 
@@ -169,13 +173,19 @@ public:
 		return IsOK;
 	}
 
-	void CmdRecalibrate()
+	bool CmdRecalibrate()
 	{
 		WriteDR(0x07); // Recalibrate
 		WriteDR(0x00); // Drive 0
 
 		WaitForInterrupt();
-		CmdSenseInterrupt();
+
+		byte st0;
+		byte pcn;
+		CmdSenseInterrupt(st0, pcn);
+
+		// Abnormal termination = 1, Seek End = 1 -> false
+		return (st0 & 0x60) != 0x60;
 	}
 
 	bool CmdSeek(byte Cyl, byte Head)
