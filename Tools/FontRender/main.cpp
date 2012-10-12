@@ -3,6 +3,7 @@
 #include "Defs.h"
 #include "Array2.h"
 #include "File.h"
+#include <math.h>
 #include <Windows.h>
 
 #pragma comment (linker, "-entry:main")
@@ -147,24 +148,25 @@ void main()
 
 	dword TexDataH = 14;
 
-	HFONT hFont = CreateFontA(TexDataH, 0, 0, 0, FW_BOLD, 0, 0,
-		0, RUSSIAN_CHARSET, 0, 0, ANTIALIASED_QUALITY, 0, "Arial");
+	HFONT hFont = CreateFontA(TexDataH+1, 0, 0, 0, FW_NORMAL, 0, 0,
+		0, RUSSIAN_CHARSET, OUT_DEFAULT_PRECIS, 0, DEFAULT_QUALITY/*ANTIALIASED_QUALITY*/, 0, "Open Sans");
 
 	HDC tempDC = GetDC(GetDesktopWindow());
 	HDC DC = CreateCompatibleDC(tempDC);
-	HBITMAP BMP = CreateCompatibleBitmap(tempDC, 4096, TexDataH);
+	HBITMAP BMP = CreateCompatibleBitmap(tempDC, 4096, TexDataH + 1);
 	SelectObject(DC, BMP);
 	SelectObject(DC, hFont);
 
-	//SetTextColor(DC, 0xFFFFFF);
-	//SetBkColor(DC, 0);
+	SetTextColor(DC, 0xFFFFFF);
+	SetBkColor(DC, 0);
 
-	SetTextColor(DC, 0);
-	SetBkColor(DC, 0xFFFFFF);
+	//SetTextColor(DC, 0);
+	//SetBkColor(DC, 0xFFFFFF);
 	RECT RC = {0};
 	RC.top = TexDataH;
 	RC.right = 4096;
-	FillRect(DC, &RC, CreateSolidBrush(0xFFFFFF));
+	//FillRect(DC, &RC, CreateSolidBrush(0xFFFFFF));
+	FillRect(DC, &RC, CreateSolidBrush(0));
 
 	for (dword i = 0; i < 256; i++)
 	{
@@ -242,8 +244,15 @@ void main()
 			for (dword y = 0; y < TexDataH; y++)
 				for (dword x = 0; x < LWI; x++)
 				{
-//					byte V = GetPixel(DC, i * 16 + x - 1, y) & 0xFF;
-					byte V = 0xFF - (GetPixel(DC, i * 16 + x - 1, y) & 0xFF);
+					COLORREF c = GetPixel(DC, i * 16 + x, y + 1);
+					byte c1 = c & 0xFF;
+					byte c2 = (c >> 8) & 0xFF;
+					byte c3 = (c >> 16) & 0xFF;
+					byte V = (c1 + c2 * 2 + c3) / 4;
+					//byte V = 0xFF - (GetPixel(DC, i * 16 + x, y + 1) & 0xFF);
+					//double vGc = pow((V / 255.0), 1 / 2.0);
+					double vGc = V / 255.0;
+					V = (byte)(vGc * 255);
 					m_TexData[TexDataW * y + WI + x] = V;
 				}
 			WI += LWI;
@@ -254,7 +263,11 @@ void main()
 	DeleteObject(hFont);
 	DeleteObject(BMP);
 
-	CFile F("Font.raw", Write);
+	CFile F2("OpenSans.raw", Write);
+	F2.Clear();
+	F2.Write(m_TexData, TexDataW * TexDataH);
+
+	CFile F("OpenSans.vfnt", Write);
 	F.Clear();
 	F.Write(PB(&ECCount), 2);
 	F.Write(PB(&TexDataW), 2);

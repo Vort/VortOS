@@ -1,7 +1,6 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Font.cpp
 #include "API.h"
-#include "Font_Arial.h"
 #include "VideoStruct.h"
 
 // ----------------------------------------------------------------------------
@@ -49,11 +48,17 @@ class CFont
 public:
 	CFont()
 	{
-		dword Count = (PW(ArialFontImage))[0];
-		dword TotalW = (PW(ArialFontImage))[1];
-		m_FontHeight = (PW(ArialFontImage))[2];
+		char* fileName = "OpenSans.vfnt";
+		dword fileSize = GetFileSize(fileName);
+		dword fontImageSmid = KeAllocSharedMem(fileSize);
+		ReadFile(fontImageSmid, fileName);
+		byte* fontImage = KeMapSharedMem(fontImageSmid);
 
-		const byte* Ptr = ArialFontImage + 6;
+		dword Count = ((word*)fontImage)[0];
+		dword TotalW = ((word*)fontImage)[1];
+		m_FontHeight = ((word*)fontImage)[2];
+
+		const byte* Ptr = fontImage + 6;
 
 		for (dword i = 0; i < 256; i++)
 		{
@@ -74,7 +79,8 @@ public:
 
 		dword TexSMID = KeAllocSharedMem(m_FontHeight * TotalW);
 		byte* Texture = KeMapSharedMem(TexSMID);
-		RLEDeCompress(Ptr, sizeof(ArialFontImage) - 6 - Count * 2, Texture);
+		RLEDeCompress(Ptr, fileSize - 6 - Count * 2, Texture);
+		KeReleaseSharedMem(fontImageSmid);
 
 		m_BlitTableSMID = KeAllocSharedMem(256 * sizeof(CFontBlitTableEntry));
 		CFontBlitTableEntry* BlitTable = 
