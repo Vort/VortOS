@@ -4,43 +4,20 @@
 #include "VideoStruct.h"
 
 // ----------------------------------------------------------------------------
-void RLEDeCompress(const byte* Data, dword DataSize, byte* DstData)
+extern "C" void* memset(void* ptr, int value, size_t num);
+
+// ----------------------------------------------------------------------------
+#pragma pack(push, 1)
+struct GlyphHeader
 {
-	dword DstDataPtr = 0;
-	dword DataPtr = 0;
-	for (;;)
-	{
-		byte B1 = Data[DataPtr];
-		byte B2 = 0;
-		DataPtr++;
-
-		dword ChunkSize = B1 & 0x3F;
-
-		if (B1 & 0x80)
-		{
-			B2 = Data[DataPtr];
-			ChunkSize = ChunkSize | (dword(B2) << 6);
-			DataPtr++;
-		}
-
-		if (B1 & 0x40)
-		{
-			for (dword i = 0; i < ChunkSize; i++)
-				DstData[DstDataPtr++] = Data[DataPtr + i];
-			DataPtr += ChunkSize;
-		}
-		else
-		{
-			byte RepeatByte = Data[DataPtr];
-			DataPtr++;
-
-			for (dword i = 0; i < ChunkSize; i++)
-				DstData[DstDataPtr++] = RepeatByte;
-		}
-		if (DataPtr >= DataSize)
-			break;
-	}
-}
+	wchar_t code;
+	unsigned char advanceX;
+	signed char offsetX;
+	signed char offsetY;
+	unsigned char width;
+	unsigned char height;
+};
+#pragma pack(pop)
 
 // ----------------------------------------------------------------------------
 class CFont
@@ -54,53 +31,68 @@ public:
 		ReadFile(fontImageSmid, fileName);
 		byte* fontImage = KeMapSharedMem(fontImageSmid);
 
-		dword Count = ((word*)fontImage)[0];
-		dword TotalW = ((word*)fontImage)[1];
-		m_FontHeight = ((word*)fontImage)[2];
+		dword signature = ((dword*)fontImage)[0];
+		if (signature != 'tnfv')
+			return;
+		byte version = fontImage[4];
+		if (version != 1)
+			return;
+		word charCount = *((word*)&fontImage[5]);
 
-		const byte* Ptr = fontImage + 6;
+		const int fontHeight = 14;
 
 		for (dword i = 0; i < 256; i++)
+			sizes[i] = 0;
+
+		dword blitTableSMID = KeAllocSharedMem(256 * sizeof(CFontBlitTableEntry));
+		CFontBlitTableEntry* blitTable = 
+			(CFontBlitTableEntry*)KeMapSharedMem(blitTableSMID);
+		memset(blitTable, 0x00, 256 * sizeof(CFontBlitTableEntry));
+
+		dword shiftX = 0;
+		const byte* ptr = fontImage + 7;
+		for (int i = 0; i < charCount; i++)
 		{
-			m_Sizes[i] = 0;
-			m_Offsets[i] = 0;
+			GlyphHeader* gh = (GlyphHeader*)ptr;
+			sizes[gh->code] = gh->advanceX;
+			blitTable[gh->code].texSrcX = shiftX;
+			blitTable[gh->code].advanceX = gh->advanceX;
+			blitTable[gh->code].offsetX = gh->offsetX;
+			blitTable[gh->code].offsetY = gh->offsetY;
+			blitTable[gh->code].bitmapWidth = gh->width;
+			blitTable[gh->code].bitmapHeight = gh->height;
+			shiftX += gh->width;
+			ptr += sizeof(GlyphHeader) + gh->width * gh->height;
 		}
 
-		dword CurW = 0;
-		for (dword i = 0; i < Count; i++)
+		dword totalWidth = shiftX;
+		dword texSMID = KeAllocSharedMem(fontHeight * totalWidth);
+		byte* texture = KeMapSharedMem(texSMID);
+
+		shiftX = 0;
+		ptr = fontImage + 7;
+		for (int i = 0; i < charCount; i++)
 		{
-			dword C = Ptr[0];
-			dword W = Ptr[1];
-			m_Offsets[C] = CurW;
-			m_Sizes[C] = W;
-			CurW += W;
-			Ptr += 2;
+			GlyphHeader* gh = (GlyphHeader*)ptr;
+			ptr += sizeof(GlyphHeader);
+
+			for (int y = 0; y < gh->height; y++)
+				for (int x = 0; x < gh->width; x++)
+					texture[shiftX + x + y * totalWidth] = ptr[x + y * gh->width];
+
+			ptr += gh->width * gh->height;
+			shiftX += gh->width;
 		}
 
-		dword TexSMID = KeAllocSharedMem(m_FontHeight * TotalW);
-		byte* Texture = KeMapSharedMem(TexSMID);
-		RLEDeCompress(Ptr, fileSize - 6 - Count * 2, Texture);
 		KeReleaseSharedMem(fontImageSmid);
-
-		m_BlitTableSMID = KeAllocSharedMem(256 * sizeof(CFontBlitTableEntry));
-		CFontBlitTableEntry* BlitTable = 
-			(CFontBlitTableEntry*)KeMapSharedMem(m_BlitTableSMID);
-
-		for (dword i = 0; i < 256; i++)
-		{
-			BlitTable[i].m_X = m_Offsets[i];
-			BlitTable[i].m_Y = 0;
-			BlitTable[i].m_Width = m_Sizes[i];
-			BlitTable[i].m_Height = m_FontHeight;
-		}
 
 		dword OutBuf[8];
 		KeWaitForSymbol(SmSurfMgr_Ready);
 
-		OutBuf[0] = TotalW;
-		OutBuf[1] = m_FontHeight;
-		OutBuf[2] = TexSMID;
-		OutBuf[3] = m_BlitTableSMID;
+		OutBuf[0] = totalWidth;
+		OutBuf[1] = fontHeight;
+		OutBuf[2] = texSMID;
+		OutBuf[3] = blitTableSMID;
 		KeRequestCall(ClSurfMgr_SetFont, PB(OutBuf), 16, null, 0);
 
 		KeEnableNotification(NfKe_TerminateProcess);
@@ -147,7 +139,7 @@ public:
 		dword Acc = 0;
 		for (dword i = 0; i < TextSize; i++)
 		{
-			Acc += m_Sizes[Text[i]];
+			Acc += sizes[Text[i]];
 			if (Acc > Width)
 				return i;
 		}
@@ -158,18 +150,13 @@ public:
 	{
 		dword Acc = 0;
 		for (dword i = 0; i < TextSize; i++)
-			Acc += m_Sizes[Text[i]];
+			Acc += sizes[Text[i]];
 		return Acc;
 	}
 
 private:
-	dword m_BlitTableSMID;
-	CFontBlitInfo* m_FontBlitInfo;
-
-	dword m_Offsets[256];
-	dword m_Sizes[256];
-	dword m_TextSurfaceID;
-	dword m_FontHeight;
+	dword sizes[256];
+	dword textSurfaceID;
 };
 
 // ----------------------------------------------------------------------------

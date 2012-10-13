@@ -451,13 +451,13 @@ public:
 							for (dword i = 0; i < TextSize; i++)
 							{
 								char c = Text[i];
-								FontBlitInfo[i].m_SrcX = FontBlitTable[c].m_X;
-								FontBlitInfo[i].m_SrcY = FontBlitTable[c].m_Y;
-								FontBlitInfo[i].m_DstX = DstX;
-								FontBlitInfo[i].m_DstY = Y;
-								FontBlitInfo[i].m_Width = FontBlitTable[c].m_Width;
-								FontBlitInfo[i].m_Height = FontBlitTable[c].m_Height;
-								DstX += FontBlitTable[c].m_Width;
+								FontBlitInfo[i].m_SrcX = FontBlitTable[c].texSrcX;
+								FontBlitInfo[i].m_SrcY = 0;
+								FontBlitInfo[i].m_DstX = DstX + FontBlitTable[c].offsetX;
+								FontBlitInfo[i].m_DstY = Y + FontBlitTable[c].offsetY;
+								FontBlitInfo[i].m_Width = FontBlitTable[c].bitmapWidth;
+								FontBlitInfo[i].m_Height = FontBlitTable[c].bitmapHeight;
+								DstX += FontBlitTable[c].advanceX;
 
 								AddDirty(
 									SX + FontBlitInfo[i].m_DstX,

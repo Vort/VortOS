@@ -1,302 +1,83 @@
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// main.cpp
-#include "Defs.h"
-#include "Array2.h"
-#include "File.h"
-#include <math.h>
-#include <Windows.h>
+#define _CRT_SECURE_NO_WARNINGS
+#pragma comment(lib, "freetype.lib")
 
-#pragma comment (linker, "-entry:main")
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
-// ----------------------------------------------------------------------------
-using namespace Lib;
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <map>
+#include <string>
+#include <algorithm>
 
-// ----------------------------------------------------------------------------
-void RLEWriteSize(dword Size, bool IsSolid, CArray<byte>& Dest)
+using namespace std;
+
+#pragma pack(push, 1)
+struct GlyphHeader
 {
-	byte B1 = 0;
-	byte B2 = 0;
+	wchar_t code;
+	unsigned char advanceX;
+	signed char offsetX;
+	signed char offsetY;
+	unsigned char width;
+	unsigned char height;
+};
+#pragma pack(pop)
 
-	if (IsSolid)
-		B1 |= 0x40;
+FT_Library  library;
+FT_Face     face;
 
-	B1 |= Size & 0x3F;
+vector<wchar_t> charCodes;
 
-	if (Size <= 0x3F)
-		Dest.PushBack(B1);
-	else if (Size <= 0x3FFF)
-	{
-		B1 |= 0x80;
-		B2 = (Size >> 6) & 0xFF;
-		Dest.PushBack(B1);
-		Dest.PushBack(B2);
-	}
-	else
-		Err;
-}
-
-// ----------------------------------------------------------------------------
-void RLECompress(byte* Data, dword DataSize, CArray<byte>& Dest)
-{
-	bool IsRepeat = false;
-	CArray<byte> Chunk;
-	for (dword i = 0; i < DataSize; i++)
-	{
-		Chunk.PushBack(Data[i]);
-		dword ChunkSize = Chunk.Size();
-
-//		if (ChunkSize > 3)
-		if (ChunkSize > 2)
-		{
-			byte B1 = Chunk[ChunkSize - 1];
-			byte B2 = Chunk[ChunkSize - 2];
-			byte B3 = Chunk[ChunkSize - 3];
-			//byte B4 = Chunk[ChunkSize - 4];
-			bool B = (B1 == B2) && (B1 == B3)/* && (B1 == B4)*/;
-			if (!IsRepeat)
-			{
-				if (B)
-				{
-					CArray<byte> SolidChunk = Chunk.Extract(0, ChunkSize - /*4*/3);
-					dword SolidChunkSize = SolidChunk.Size();
-					if (SolidChunkSize != 0)
-					{
-						RLEWriteSize(SolidChunkSize, true, Dest);
-						Dest.PushBack(SolidChunk);
-					}
-					IsRepeat = true;
-				}
-			}
-			else
-			{
-				if (!B)
-				{
-					byte RepeatByte = Chunk[0];
-					dword RepeatChunkSize = ChunkSize - 1;
-					Chunk.Delete(0, RepeatChunkSize);
-
-					RLEWriteSize(RepeatChunkSize, false, Dest);
-					Dest.PushBack(RepeatByte);
-					IsRepeat = false;
-				}
-			}
-		}
-	}
-
-	if (Chunk.Size() == 0)
-		return;
-
-	if (IsRepeat)
-	{
-		byte RepeatByte = Chunk[0];
-		dword RepeatChunkSize = Chunk.Size();
-
-		RLEWriteSize(RepeatChunkSize, false, Dest);
-		Dest.PushBack(RepeatByte);
-	}
-	else
-	{
-		dword SolidChunkSize = Chunk.Size();
-		RLEWriteSize(SolidChunkSize, true, Dest);
-		Dest.PushBack(Chunk);
-	}
-}
-
-// ----------------------------------------------------------------------------
-void RLEDeCompress(byte* Data, dword DataSize, CArray<byte>& Dest)
-{
-	dword DataPtr = 0;
-	for (;;)
-	{
-		byte B1 = Data[DataPtr];
-		byte B2 = 0;
-		DataPtr++;
-
-		dword ChunkSize = B1 & 0x3F;
-
-		if (B1 & 0x80)
-		{
-			B2 = Data[DataPtr];
-			ChunkSize = ChunkSize | (dword(B2) << 6);
-			DataPtr++;
-		}
-
-		if (B1 & 0x40)
-		{
-			for (dword i = 0; i < ChunkSize; i++)
-				Dest.PushBack(Data[DataPtr + i]);
-			DataPtr += ChunkSize;
-		}
-		else
-		{
-			byte RepeatByte = Data[DataPtr];
-			DataPtr++;
-
-			for (dword i = 0; i < ChunkSize; i++)
-				Dest.PushBack(RepeatByte);
-		}
-		if (DataPtr >= DataSize)
-			break;
-	}
-}
-
-// ----------------------------------------------------------------------------
 void main()
 {
-	CArray<dword> m_LetterW;
-	CArray<dword> m_LetterH;
+	wchar_t addCodes[] = L" !\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~";
+    for (int i = 0; i < sizeof(addCodes) / 2 - 1; i++)
+		charCodes.push_back(addCodes[i]);
+	for (wchar_t c = L'0'; c <= L'9'; c++)
+		charCodes.push_back(c);
+	for (wchar_t c = L'a'; c <= L'z'; c++)
+		charCodes.push_back(c);
+	for (wchar_t c = L'A'; c <= L'Z'; c++)
+		charCodes.push_back(c);
+	/*
+	for (wchar_t c = L'à'; c <= L'ÿ'; c++)
+		charCodes.push_back(c);
+	for (wchar_t c = L'À'; c <= L'ß'; c++)
+		charCodes.push_back(c);
+	*/
+	sort(charCodes.begin(), charCodes.end());
 
-	dword TexDataH = 14;
+	FT_Init_FreeType(&library);
 
-	HFONT hFont = CreateFontA(TexDataH+1, 0, 0, 0, FW_NORMAL, 0, 0,
-		0, RUSSIAN_CHARSET, OUT_DEFAULT_PRECIS, 0, DEFAULT_QUALITY/*ANTIALIASED_QUALITY*/, 0, "Open Sans");
+	string fontPath = string(getenv("windir")) + "\\Fonts\\OpenSans-Regular.ttf";
+	FT_New_Face(library, fontPath.c_str(), 0, &face);
 
-	HDC tempDC = GetDC(GetDesktopWindow());
-	HDC DC = CreateCompatibleDC(tempDC);
-	HBITMAP BMP = CreateCompatibleBitmap(tempDC, 4096, TexDataH + 1);
-	SelectObject(DC, BMP);
-	SelectObject(DC, hFont);
+	FT_Set_Char_Size(face, 0, 8 * 64, 96, 96);
 
-	SetTextColor(DC, 0xFFFFFF);
-	SetBkColor(DC, 0);
-
-	//SetTextColor(DC, 0);
-	//SetBkColor(DC, 0xFFFFFF);
-	RECT RC = {0};
-	RC.top = TexDataH;
-	RC.right = 4096;
-	//FillRect(DC, &RC, CreateSolidBrush(0xFFFFFF));
-	FillRect(DC, &RC, CreateSolidBrush(0));
-
-	for (dword i = 0; i < 256; i++)
+	ofstream fontFile;
+	unsigned int signature = 'tnfv';
+	unsigned char version = 1;
+	short charCount = charCodes.size();
+	fontFile.open("OpenSans.vfnt", ios_base::binary);
+	fontFile.write((char*)&signature, 4);
+	fontFile.write((char*)&version, 1);
+	fontFile.write((char*)&charCount, 2);
+	for (size_t i = 0; i < charCodes.size(); i++)
 	{
-		char c[2] = {0};
-		c[0] = char(i);
-		SIZE S = {0};
-		GetTextExtentPoint32A(DC, c, 1, &S);
-		m_LetterW.PushBack(S.cx/* + 1*/);
-		m_LetterH.PushBack(S.cy);
+		FT_UInt glyph_index = FT_Get_Char_Index(face, charCodes[i]);
+		FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+		FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
 
-		TextOutA(DC, i * 16, 0, c, 1);
+		GlyphHeader gh;
+		gh.code = charCodes[i];
+		gh.advanceX = (unsigned char)(face->glyph->advance.x >> 6);
+		gh.offsetX = face->glyph->bitmap_left;
+		gh.offsetY = 11 - face->glyph->bitmap_top;
+		gh.width = face->glyph->bitmap.width;
+		gh.height = face->glyph->bitmap.rows;
+		fontFile.write((char*)&gh, sizeof(GlyphHeader));
+		fontFile.write((char*)face->glyph->bitmap.buffer, gh.width * gh.height);
 	}
-
-	bool EnChars[256] = {0};
-	for (char c = '0'; c <= '9'; c++)
-		EnChars[c] = true;
-	for (char c = 'a'; c <= 'z'; c++)
-		EnChars[c] = true;
-	for (char c = 'A'; c <= 'Z'; c++)
-		EnChars[c] = true;
-
-	EnChars[' '] = true;
-	EnChars['!'] = true;
-	EnChars['"'] = true;
-	EnChars['#'] = true;
-	EnChars['$'] = true;
-	EnChars['%'] = true;
-	EnChars['&'] = true;
-	EnChars['\''] = true;
-	EnChars['('] = true;
-	EnChars[')'] = true;
-	EnChars['*'] = true;
-	EnChars['+'] = true;
-	EnChars[','] = true;
-	EnChars['-'] = true;
-	EnChars['.'] = true;
-	EnChars['/'] = true;
-	EnChars[':'] = true;
-	EnChars[';'] = true;
-	EnChars['<'] = true;
-	EnChars['='] = true;
-	EnChars['>'] = true;
-	EnChars['?'] = true;
-	EnChars['@'] = true;
-	EnChars['['] = true;
-	EnChars['\\'] = true;
-	EnChars[']'] = true;
-	EnChars['^'] = true;
-	EnChars['_'] = true;
-	EnChars['`'] = true;
-	EnChars['{'] = true;
-	EnChars['|'] = true;
-	EnChars['}'] = true;
-	EnChars['~'] = true;
-
-	dword ECCount = 0;
-	dword TexDataW = 0;
-	for (dword i = 0; i < 256; i++)
-	{
-		if (EnChars[i])
-		{
-			TexDataW += m_LetterW[i];
-			ECCount++;
-		}
-	}
-	//cout << TexDataW;
-	byte* m_TexData = new byte[TexDataW * TexDataH];
-
-	dword WI = 0;
-	for (dword i = 0; i < 256; i++)
-	{
-		if (EnChars[i])
-		{
-			dword LWI = m_LetterW[i];
-			for (dword y = 0; y < TexDataH; y++)
-				for (dword x = 0; x < LWI; x++)
-				{
-					COLORREF c = GetPixel(DC, i * 16 + x, y + 1);
-					byte c1 = c & 0xFF;
-					byte c2 = (c >> 8) & 0xFF;
-					byte c3 = (c >> 16) & 0xFF;
-					byte V = (c1 + c2 * 2 + c3) / 4;
-					//byte V = 0xFF - (GetPixel(DC, i * 16 + x, y + 1) & 0xFF);
-					//double vGc = pow((V / 255.0), 1 / 2.0);
-					double vGc = V / 255.0;
-					V = (byte)(vGc * 255);
-					m_TexData[TexDataW * y + WI + x] = V;
-				}
-			WI += LWI;
-		}
-	}
-
-	DeleteDC(DC);
-	DeleteObject(hFont);
-	DeleteObject(BMP);
-
-	CFile F2("OpenSans.raw", Write);
-	F2.Clear();
-	F2.Write(m_TexData, TexDataW * TexDataH);
-
-	CFile F("OpenSans.vfnt", Write);
-	F.Clear();
-	F.Write(PB(&ECCount), 2);
-	F.Write(PB(&TexDataW), 2);
-	F.Write(PB(&TexDataH), 2);
-
-	for (dword i = 0; i < 256; i++)
-	{
-		if (EnChars[i])
-		{
-			dword LW = m_LetterW[i];
-			F.Write(PB(&i), 1);
-			F.Write(PB(&LW), 1);
-		}
-	}
-
-	CArray<byte> Compressed;
-	RLECompress(m_TexData, TexDataW * 14, Compressed);
-
-	CArray<byte> DeCompressed;
-	RLEDeCompress(Compressed._ptr(), Compressed.Size(), DeCompressed);
-
-	if (DeCompressed.Size() != TexDataW * 14)
-		Err;
-
-	for (dword i = 0; i < TexDataW * 14; i++)
-		if (DeCompressed[i] != m_TexData[i])
-			Err;
-
-	//F.Write(m_TexData, TexDataW * 14);
-	F.Write(Compressed._ptr(), Compressed.Size());
 }
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

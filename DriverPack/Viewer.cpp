@@ -15,11 +15,11 @@ public:
 		m_CursorPos = -1;
 
 		m_X = 280;
-		m_Y = 110;
+		m_Y = 96;
 
 		m_ActiveDisk = 0;
 		m_DiskCount = 0;
-		m_VCount = 14;
+		m_VCount = 15;
 		m_HCount = 3;
 		m_VElSize = 14;
 		m_VDiskElSize = 14;
