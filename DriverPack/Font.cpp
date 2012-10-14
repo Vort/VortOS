@@ -39,8 +39,6 @@ public:
 			return;
 		word charCount = *((word*)&fontImage[5]);
 
-		const int fontHeight = 14;
-
 		for (dword i = 0; i < 2048; i++)
 			sizes[i] = 0;
 
@@ -50,6 +48,7 @@ public:
 		memset(blitTable, 0x00, 2048 * sizeof(CFontBlitTableEntry));
 
 		dword shiftX = 0;
+		dword textureHeight = 0;
 		const byte* ptr = fontImage + 7;
 		for (int i = 0; i < charCount; i++)
 		{
@@ -61,12 +60,14 @@ public:
 			blitTable[gh->code].offsetY = gh->offsetY;
 			blitTable[gh->code].bitmapWidth = gh->width;
 			blitTable[gh->code].bitmapHeight = gh->height;
+			if (gh->height > textureHeight)
+				textureHeight = gh->height;
 			shiftX += gh->width;
 			ptr += sizeof(GlyphHeader) + gh->width * gh->height;
 		}
 
-		dword totalWidth = shiftX;
-		dword texSMID = KeAllocSharedMem(fontHeight * totalWidth);
+		dword textureWidth = shiftX;
+		dword texSMID = KeAllocSharedMem(textureHeight * textureWidth);
 		byte* texture = KeMapSharedMem(texSMID);
 
 		shiftX = 0;
@@ -78,19 +79,20 @@ public:
 
 			for (int y = 0; y < gh->height; y++)
 				for (int x = 0; x < gh->width; x++)
-					texture[shiftX + x + y * totalWidth] = ptr[x + y * gh->width];
+					texture[shiftX + x + y * textureWidth] = ptr[x + y * gh->width];
 
 			ptr += gh->width * gh->height;
 			shiftX += gh->width;
 		}
 
 		KeReleaseSharedMem(fontImageSmid);
+		KeUnmapSharedMem(texSMID);
 
 		dword OutBuf[8];
 		KeWaitForSymbol(SmSurfMgr_Ready);
 
-		OutBuf[0] = totalWidth;
-		OutBuf[1] = fontHeight;
+		OutBuf[0] = textureWidth;
+		OutBuf[1] = textureHeight;
 		OutBuf[2] = texSMID;
 		OutBuf[3] = blitTableSMID;
 		KeRequestCall(ClSurfMgr_SetFont, PB(OutBuf), 16, null, 0);
