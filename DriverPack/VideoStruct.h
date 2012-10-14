@@ -7,12 +7,12 @@
 class CFontBlitTableEntry
 {
 public:
-	int advanceX;
-	int texSrcX;
-	int offsetX;
-	int offsetY;
-	int bitmapWidth;
-	int bitmapHeight;
+	short advanceX;
+	short texSrcX;
+	short offsetX;
+	short offsetY;
+	short bitmapWidth;
+	short bitmapHeight;
 };
 
 // ----------------------------------------------------------------------------

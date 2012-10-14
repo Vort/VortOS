@@ -41,13 +41,13 @@ public:
 
 		const int fontHeight = 14;
 
-		for (dword i = 0; i < 256; i++)
+		for (dword i = 0; i < 2048; i++)
 			sizes[i] = 0;
 
-		dword blitTableSMID = KeAllocSharedMem(256 * sizeof(CFontBlitTableEntry));
+		dword blitTableSMID = KeAllocSharedMem(2048 * sizeof(CFontBlitTableEntry));
 		CFontBlitTableEntry* blitTable = 
 			(CFontBlitTableEntry*)KeMapSharedMem(blitTableSMID);
-		memset(blitTable, 0x00, 256 * sizeof(CFontBlitTableEntry));
+		memset(blitTable, 0x00, 2048 * sizeof(CFontBlitTableEntry));
 
 		dword shiftX = 0;
 		const byte* ptr = fontImage + 7;
@@ -155,8 +155,7 @@ public:
 	}
 
 private:
-	dword sizes[256];
-	dword textSurfaceID;
+	short sizes[2048];
 };
 
 // ----------------------------------------------------------------------------

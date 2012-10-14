@@ -15,10 +15,12 @@ public:
 
 		m_IsLocked = false;
 
-		char* HelloText = "Hello, World!!!!!!!";
+		char* HelloText1 = "Hello, world!";
+		wchar_t* HelloText2 = L"Привет, мир!";
 		dword SurfaceID = CreateSurface(m_SurfX, m_SurfY, m_SurfW, m_SurfH);
 		FillSurface(SurfaceID, 0xB0E0E0FF);
-		OutText(SurfaceID, 0, 0, 0xFF0000FF, HelloText);
+		OutText(SurfaceID, 0, 0, 0xFF0000FF, HelloText1);
+		OutText(SurfaceID, 0, 14, 0xFF0000FF, HelloText2);
 
 		ShowSurface(SurfaceID);
 
@@ -50,7 +52,8 @@ public:
 				if (N.GetByte(0) == VK_F)
 				{
 					FillSurface(SurfaceID, 0xFFEEEEFF);
-					OutText(SurfaceID, 0, 0, 0xFF0000FF, HelloText);
+					OutText(SurfaceID, 0, 0, 0xFF0000FF, HelloText1);
+					OutText(SurfaceID, 0, 14, 0xFF0000FF, HelloText2);
 				}
 			}
 			else if (N.GetID() == Nf_MouseButtonDown)

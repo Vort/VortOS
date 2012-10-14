@@ -211,7 +211,7 @@ public:
 		dword BlitTableSMID = 0;
 		CFontBlitTableEntry* FontBlitTable = null;
 
-		dword BlitSMID = KeAllocSharedMem(170 * sizeof(CFontBlitInfo));
+		dword BlitSMID = KeAllocSharedMem(128 * sizeof(CFontBlitInfo));
 		CFontBlitInfo* FontBlitInfo = (CFontBlitInfo*)KeMapSharedMem(BlitSMID);
 
 		CArray<dword> WaitCltPIDs;
@@ -428,6 +428,7 @@ public:
 						dword X      = N.GetDword(1);
 						dword Y      = N.GetDword(2);
 						dword Color  = N.GetDword(3);
+						dword IsWide = N.GetDword(4);
 
 						CSmartPtr<CSurface> S = GetSurfaceByID(SurfID);
 
@@ -436,9 +437,11 @@ public:
 							int SX, SY;
 							S->GetPosition(SX, SY);
 
-							char* Text = PC(N.GetBuf() + 16);
-							//dword TextSize = strlen(Text);
-							dword TextSize = N.GetSize() - 16;
+							dword TextSize = 0;
+							if (!IsWide)
+								TextSize = N.GetSize() - 20;
+							else
+								TextSize = (N.GetSize() - 20) / 2;
 
 							dword OutBuf[5];
 							OutBuf[0] = FontSurfaceID;
@@ -450,7 +453,21 @@ public:
 							dword DstX = X;
 							for (dword i = 0; i < TextSize; i++)
 							{
-								char c = Text[i];
+								wchar_t c = L'\0';
+								if (!IsWide)
+									c = ((char*)(N.GetBuf() + 20))[i];
+								else
+									c = ((wchar_t*)(N.GetBuf() + 20))[i];
+
+								if (c < 0x20)
+									continue;
+								if (!IsWide)
+									if (c > 0x7E)
+										continue;
+								if (IsWide)
+									if (c > 2047)
+										continue;
+
 								FontBlitInfo[i].m_SrcX = FontBlitTable[c].texSrcX;
 								FontBlitInfo[i].m_SrcY = 0;
 								FontBlitInfo[i].m_DstX = DstX + FontBlitTable[c].offsetX;

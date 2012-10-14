@@ -7,7 +7,6 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <map>
 #include <string>
 #include <algorithm>
 
@@ -32,7 +31,7 @@ vector<wchar_t> charCodes;
 
 void main()
 {
-	wchar_t addCodes[] = L" !\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~";
+	wchar_t addCodes[] = L" !\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~¨¸²³¯¿ªº¥´";
     for (int i = 0; i < sizeof(addCodes) / 2 - 1; i++)
 		charCodes.push_back(addCodes[i]);
 	for (wchar_t c = L'0'; c <= L'9'; c++)
@@ -41,12 +40,10 @@ void main()
 		charCodes.push_back(c);
 	for (wchar_t c = L'A'; c <= L'Z'; c++)
 		charCodes.push_back(c);
-	/*
 	for (wchar_t c = L'à'; c <= L'ÿ'; c++)
 		charCodes.push_back(c);
 	for (wchar_t c = L'À'; c <= L'ß'; c++)
 		charCodes.push_back(c);
-	*/
 	sort(charCodes.begin(), charCodes.end());
 
 	FT_Init_FreeType(&library);

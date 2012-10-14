@@ -245,18 +245,36 @@ dword FitText(dword Width, char* Text, dword TextSize)
 }
 
 // ----------------------------------------------------------------------------
-void OutText(dword SurfID, int X, int Y, dword Color, const char* Text)
+void OutText(dword surfId, int x, int y, dword color, const wchar_t* text)
 {
-	dword ResultSize = 0;
-	byte TextBuf[64];
-	*PD(&TextBuf[0]) = SurfID;
-	*PD(&TextBuf[4]) = X;
-	*PD(&TextBuf[8]) = Y;
-	*PD(&TextBuf[12]) = Color;
+	byte textBuf[276];
+	*(dword*)&textBuf[0] = surfId;
+	*(dword*)&textBuf[4] = x;
+	*(dword*)&textBuf[8] = y;
+	*(dword*)&textBuf[12] = color;
+	*(dword*)&textBuf[16] = 1;
+
 	dword i = 0;
-	for (; Text[i]; i++)
-		TextBuf[16+i] = Text[i];
-	while (!KeNotify(NfSurfMgr_TextBlit, TextBuf, 16 + i))
+	for (; (i < 128) && (text[i] != L'\0'); i++)
+		((wchar_t*)textBuf)[10 + i] = text[i];
+	while (!KeNotify(NfSurfMgr_TextBlit, textBuf, 20 + i * 2))
+		KeWaitTicks(0);
+}
+
+// ----------------------------------------------------------------------------
+void OutText(dword surfId, int x, int y, dword color, const char* text)
+{
+	byte textBuf[148];
+	*(dword*)&textBuf[0] = surfId;
+	*(dword*)&textBuf[4] = x;
+	*(dword*)&textBuf[8] = y;
+	*(dword*)&textBuf[12] = color;
+	*(dword*)&textBuf[16] = 0;
+
+	dword i = 0;
+	for (; (i < 128) && (text[i] != '\0'); i++)
+		textBuf[20 + i] = text[i];
+	while (!KeNotify(NfSurfMgr_TextBlit, textBuf, 20 + i))
 		KeWaitTicks(0);
 }
 

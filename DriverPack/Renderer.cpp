@@ -390,6 +390,7 @@ public:
 								*S, FBI[i].m_DstX, FBI[i].m_DstY,
 								FBI[i].m_Width, FBI[i].m_Height, Color);
 						}
+						KeUnmapSharedMem(SMID);
 					}
 					CR.Respond();
 				}
