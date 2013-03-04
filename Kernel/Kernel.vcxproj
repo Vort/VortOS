@@ -20,8 +20,7 @@
     <ProjectDir>$(MSBuildProjectDirectory)\</ProjectDir>
     <OutputPath>$(ProjectDir)Release\</OutputPath>
     <ImagePath>$(ProjectDir)..\Image\</ImagePath>
-    <FloppyRootPath>$(ImagePath)FloppyRoot\</FloppyRootPath>
-    <CdRootPath>$(ImagePath)CDRoot\</CdRootPath>
+    <ImageFilesPath>$(ImagePath)ImageFiles\</ImageFilesPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -99,11 +98,9 @@
     <CL Sources="@(ClCompile)" BufferSecurityCheck="false" WholeProgramOptimization="true" StringPooling="true" Optimization="Full" OmitFramePointers="true" DebugInformationFormat="ProgramDatabase" ObjectFileName="$(OutputPath)" ProgramDataBaseFileName="$(OutputPath)vc100.pdb" />
     <Link Sources="@(ClCompile ->'$(OutputPath)%(Filename).obj');$(ProjectDir)*.obj" GenerateDebugInformation="true" IgnoreAllDefaultLibraries="true" LinkTimeCodeGeneration="UseLinkTimeCodeGeneration" OptimizeReferences="true" FixedBaseAddress="true" BaseAddress="0x20000" EntryPointSymbol="Entry" SubSystem="Windows" OutputFile="$(OutputPath)Kernel.bi_" AdditionalOptions="/filealign:4096" />
     <Exec Command="$(ProjectDir)KernelStripper.exe $(OutputPath)Kernel.bi_" />
-    <MakeDir Directories="$(FloppyRootPath)" Condition="!Exists('$(FloppyRootPath)')" />
-    <MakeDir Directories="$(CDRootPath)" Condition="!Exists('$(CDRootPath)')" />
-    <Copy SourceFiles="$(OutputPath)Kernel.bin" DestinationFolder="$(FloppyRootPath)\" />
-    <Copy SourceFiles="$(OutputPath)Kernel.bin" DestinationFolder="$(CDRootPath)\" />
-    <Exec Command="$(ImagePath)Pack.bat" WorkingDirectory="$(ImagePath)" />
+    <MakeDir Directories="$(ImageFilesPath)" Condition="!Exists('$(ImageFilesPath)')" />
+    <Copy SourceFiles="$(OutputPath)Kernel.bin" DestinationFolder="$(ImageFilesPath)\" />
+    <Exec Command="$(ImagePath)MakeImage.bat" WorkingDirectory="$(ImagePath)" />
   </Target>
   <Target Name="Clean">
     <Exec Command="del $(OutputPath)* /Q" />

@@ -20,8 +20,7 @@
     <ProjectDir>$(MSBuildProjectDirectory)\</ProjectDir>
     <OutputPath>$(ProjectDir)Release\</OutputPath>
     <ImagePath>$(ProjectDir)..\Image\</ImagePath>
-    <FloppyRootPath>$(ImagePath)FloppyRoot\</FloppyRootPath>
-    <CdRootPath>$(ImagePath)CDRoot\</CdRootPath>
+    <ImageFilesPath>$(ImagePath)ImageFiles\</ImageFilesPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -282,15 +281,11 @@
     <Exec Command="$(ProjectDir)DriverStripper.exe %(StrippableBin.Identity) %(StrippableBin.Priority) %(StrippableBin.AccessLevel)" />
   </Target>
   <Target Name="Build" DependsOnTargets="EnvSetup;Compile;Link;Strip">
-    <MakeDir Directories="$(FloppyRootPath)" Condition="!Exists('$(FloppyRootPath)')" />
-    <MakeDir Directories="$(CDRootPath)" Condition="!Exists('$(CDRootPath)')" />
+    <MakeDir Directories="$(ImageFilesPath)" Condition="!Exists('$(ImageFilesPath)')" />
     <Copy
       SourceFiles="@(LinkableObj ->'$(OutputPath)%(Filename).bin')"
-      DestinationFolder="$(FloppyRootPath)\" />
-    <Copy
-      SourceFiles="@(LinkableObj ->'$(OutputPath)%(Filename).bin')"
-      DestinationFolder="$(CDRootPath)\" />
-    <Exec Command="$(ImagePath)Pack.bat" WorkingDirectory="$(ImagePath)" />
+      DestinationFolder="$(ImageFilesPath)\" />
+    <Exec Command="$(ImagePath)MakeImage.bat" WorkingDirectory="$(ImagePath)" />
   </Target>
   <Target Name="Clean">
     <Exec Command="del $(OutputPath)* /Q" />

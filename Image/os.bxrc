@@ -11,14 +11,13 @@ vga: extension=vbe, update_freq=15
 #log: bochsout.txt
 
 pci: enabled=1, chipset=i440fx, slot1=ne2k
-ne2k: mac=b0:c4:20:00:00:02, ethmod=win32, ethdev=\Device\NPF_{CF703875-DA41-4568-B9EF-66F25AFE1087}
-#ne2k: mac=b0:c4:20:00:00:02, ethmod=vnet
+#ne2k: mac=b0:c4:20:00:00:02, ethmod=win32, ethdev=\Device\NPF_{CF703875-DA41-4568-B9EF-66F25AFE1087}
+ne2k: mac=b0:c4:20:00:00:02, ethmod=vnet
 
 #mouse: enabled=0, type=serial
 #com1: enabled=1, mode=mouse
 
-ata0-master: type=cdrom, path=os.iso, status=inserted
-floppya: 1_44=os.ima, status=inserted
+ata0-master: type=cdrom, path=VortOS.iso, status=inserted
+floppya: 1_44=VortOS.ima, status=inserted
 
-#boot: floppy
-boot: cdrom
+boot: cdrom, floppy

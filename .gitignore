@@ -6,8 +6,7 @@
 /DriverPack/*.bi_
 /Image/*.iso
 /Image/*.ima
-/Image/CDRoot/*
-/Image/FloppyRoot/*
+/Image/ImageFiles/*
 /Tools/*/Release
 
 ipch
