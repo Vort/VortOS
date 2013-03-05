@@ -18,6 +18,6 @@ ne2k: mac=b0:c4:20:00:00:02, ethmod=vnet
 #com1: enabled=1, mode=mouse
 
 ata0-master: type=cdrom, path=VortOS.iso, status=inserted
-floppya: 1_44=VortOS.ima, status=inserted
+floppya: image=VortOS.ima, status=inserted
 
 boot: cdrom, floppy
