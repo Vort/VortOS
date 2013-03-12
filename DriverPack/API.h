@@ -177,17 +177,29 @@ void WordToString(word Word, char* Buf)
 }
 
 // ----------------------------------------------------------------------------
-void DebugOut(const char* Str, dword StrSize)
+void DebugOut(const char* str)
 {
-	KeNotify(Nf_DebugOut, PB(Str), StrSize);
+	KeNotify(Nf_DebugOut, (byte*)str, strlen(str));
 }
 
 // ----------------------------------------------------------------------------
-void DebugOut(byte Byte)
+void DebugOut(const char* str, int strLen)
 {
-	char Buf[2];
-	ByteToString(Byte, Buf);
-	KeNotify(Nf_DebugOut, PB(Buf), 2);
+	KeNotify(Nf_DebugOut, (byte*)str, strLen);
+}
+
+// ----------------------------------------------------------------------------
+void DebugOutLine()
+{
+	char newLine = '\n';
+	KeNotify(Nf_DebugOut, (byte*)&newLine, 1);
+}
+
+// ----------------------------------------------------------------------------
+void DebugOutLine(const char* str)
+{
+	DebugOut(str);
+	DebugOutLine();
 }
 
 // ----------------------------------------------------------------------------
@@ -199,7 +211,15 @@ void DebugOutDec(dword val)
 }
 
 // ----------------------------------------------------------------------------
-void DebugOut(dword Dword)
+void DebugOutHex(byte Byte)
+{
+	char Buf[2];
+	ByteToString(Byte, Buf);
+	KeNotify(Nf_DebugOut, PB(Buf), 2);
+}
+
+// ----------------------------------------------------------------------------
+void DebugOutHex(dword Dword)
 {
 	char Buf[8];
 	WordToString(Dword >> 16, Buf);

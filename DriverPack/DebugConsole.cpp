@@ -13,10 +13,10 @@ public:
 
 		m_CursorX = 0;
 		m_CursorY = 0;
-		m_Width = 400;
-		m_Height = 140;
+		m_Width = 192;
+		m_Height = 588;
 
-		m_SurfaceID = CreateSurface(230, 330, m_Width, m_Height);
+		m_SurfaceID = CreateSurface(600, 6, m_Width, m_Height);
 		FillSurface(m_SurfaceID, 0xFF000000);
 		ShowSurface(m_SurfaceID);
 
@@ -32,8 +32,7 @@ public:
 			N.Recv();
 			if (N.GetID() == Nf_DebugOut)
 			{
-				CheckOverflow();
-				FitOut(PC(N.GetBuf()), N.GetSize());
+				FitOut((char*)N.GetBuf(), N.GetSize());
 			}
 			else if (N.GetID() == Nf_VirtualKey)
 			{
@@ -77,37 +76,82 @@ public:
 		FillSurface(m_SurfaceID, 0xFF000000);
 	}
 
-	void CheckOverflow()
+	void FitOut(char* str, int strSize, dword color = 0xFFFFFFFF)
 	{
-		if (m_CursorY >= m_Height)
-			Clear();
-	}
-
-	void FitOut(char* Str, dword StrSize, dword Color = 0xFFFFFFFF)
-	{
-		char* StrC = Str;
-		dword StrCS = StrSize;
-		dword TextW = 0;
-		for (;;)
+		CStringA chunk1;
+		CArray<CStringA> chunks1;
+		for (int i = 0; i < strSize; i++)
 		{
-			dword FitW = m_Width - m_CursorX;
-			dword FitC = FitText(FitW, StrC, StrCS);
-
-			OutText(m_SurfaceID, m_CursorX, m_CursorY,
-				Color, StrC, FitC);
-			KeRequestCall(ClFont_GetTextWidth,
-				PB(StrC), StrCS, PB(&TextW), 4);
-			m_CursorX += TextW;
-
-			if (StrCS == FitC)
-				break;
+			if (str[i] != '\n')
+			{
+				chunk1.Add(str[i]);
+			}
 			else
 			{
-				StrC += FitC;
-				StrCS -= FitC;
+				if (chunk1.Len() != 0)
+					chunks1.PushBack(chunk1);
+				chunks1.PushBack("\n");
+				chunk1 = "";
+			}
+		}
+		if (chunk1.Len() != 0)
+			chunks1.PushBack(chunk1);
+
+
+		CArray<CStringA> chunks2;
+		int startPosition = m_CursorX;
+		for (int i = 0; i < chunks1.Size(); i++)
+		{
+			if (chunks1[i].GetCh(0) == '\n')
+			{
+				chunks2.PushBack(chunks1[i]);
+				startPosition = 0;
+				continue;
+			}
+
+			CStringA chunkPart = chunks1[i];
+			for (;;)
+			{
+				int widthLeft = m_Width - startPosition;
+				int fitCharCount = FitText(widthLeft,
+					chunkPart._ptr(), chunkPart.Len());
+				if (fitCharCount == chunkPart.Len())
+				{
+					chunks2.PushBack(chunkPart);
+					break;
+				}
+				else
+				{
+					chunks2.PushBack(chunkPart.Left(fitCharCount));
+					chunkPart = chunkPart.RightAbs(fitCharCount);
+
+					chunks2.PushBack("\n");
+					startPosition = 0;
+				}
+			}
+		}
+
+
+		for (int i = 0; i < chunks2.Size(); i++)
+		{
+			if (chunks2[i].GetCh(0) == '\n')
+			{
 				m_CursorX = 0;
 				m_CursorY += 14;
+				if (m_CursorY + 14 > m_Height)
+					m_CursorY = 0;
+				DrawRect(m_SurfaceID, 0, m_CursorY, m_Width, 14, 0xFF000000);
+				continue;
 			}
+
+			OutText(m_SurfaceID, m_CursorX, m_CursorY,
+				color, chunks2[i]._ptr(), chunks2[i].Len());
+
+			dword printedTextWidth = 0;
+			KeRequestCall(ClFont_GetTextWidth,
+				(byte*)chunks2[i]._ptr(), chunks2[i].Len(),
+				(byte*)&printedTextWidth, 4);
+			m_CursorX += printedTextWidth;
 		}
 	}
 

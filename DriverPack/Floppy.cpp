@@ -311,7 +311,7 @@ public:
 		if (m_Drives[DriveIndex].IsMotorEnabled())
 			return;
 
-		DebugOut("[FM+]", 6);
+		DebugOut("[FM+]");
 		m_Drives[DriveIndex].EnableMotor();
 		UpdateDOR();
 	}
@@ -321,7 +321,7 @@ public:
 		if (!m_Drives[DriveIndex].IsMotorEnabled())
 			return;
 
-		DebugOut("[FM-]", 6);
+		DebugOut("[FM-]");
 		m_Drives[DriveIndex].DisableMotor();
 		UpdateDOR();
 	}

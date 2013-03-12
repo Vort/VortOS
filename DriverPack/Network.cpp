@@ -226,9 +226,9 @@ public:
 				
 			if (IsIpEqual(arp->TargetIp, selfIp))
 			{
-				DebugOut("[arp req from:", 14);
+				DebugOut("[arp req from:");
 				DebugOutIp(arp->SenderIp);
-				DebugOut("]", 1);
+				DebugOut("]");
 
 				ArpHeader arpReply;
 				WriteMac(arpReply.Eth.DstMac, arp->Eth.SrcMac);
@@ -337,9 +337,9 @@ public:
 
 		if (SwapWord(udp->DestinationPort) == 12321)
 		{
-			DebugOut("[udp:", 5);
+			DebugOut("[udp:");
 			DebugOut((char*)udp + sizeof(UdpHeader), dataLength);
-			DebugOut("]", 5);
+			DebugOut("]");
 		}
 	}
 
@@ -409,9 +409,9 @@ public:
 			WriteIp(arp.TargetIp, selfIp);
 			KeNotify(NfNetwork_SendPacket, (byte*)&arp, sizeof(ArpHeader));
 
-			DebugOut("[dhcp_ip:", 9);
+			DebugOut("[dhcp_ip:");
 			DebugOutIp(selfIp);
-			DebugOut("]", 1);
+			DebugOut("]");
 		}
 	}
 
@@ -420,7 +420,7 @@ public:
 		for (int i = 0; i < 4; i++)
 		{
 			if (i != 0)
-				DebugOut(".", 1);
+				DebugOut(".");
 			DebugOutDec(ip[i]);
 		}
 	}
@@ -449,7 +449,7 @@ public:
 		if (CalcIcmpEchoChecksum(icmpEcho, dataLen) != 0x0000)
 			return;
 
-		DebugOut("[ping]", 6);
+		DebugOut("[ping]");
 
 		const int replyLen = sizeof(IcmpEchoHeader) + dataLen;
 		byte* reply = new byte[replyLen];
@@ -485,7 +485,7 @@ public:
 		if (packetLen < sizeof(EthernetHeader))
 			return;
 
-		DebugOut("p", 1);
+		DebugOut("p");
 
 		EthernetHeader* eth = (EthernetHeader*)data;
 		if (SwapWord(eth->EtherType) == 0x0806) // ARP

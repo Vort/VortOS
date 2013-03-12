@@ -101,7 +101,7 @@ public:
 					}
 					else
 					{
-						DebugOut("[tskip]", 7);
+						DebugOut("[tskip]");
 					}
 				}
 				else if (N.GetID() == NfKe_TerminateProcess)

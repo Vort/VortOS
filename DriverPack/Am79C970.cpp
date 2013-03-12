@@ -220,7 +220,7 @@ public:
 					}
 					else
 					{
-						DebugOut("[tskip]", 7);
+						DebugOut("[tskip]");
 					}
 				}
 				else if (N.GetID() == NfKe_TerminateProcess)
@@ -249,7 +249,7 @@ public:
 			{
 				initDone = true;
 				WriteCSR(0, (ReadCSR(0) & 0x80F7) | (1 << 8));
-				DebugOut("[idone]", 7);
+				DebugOut("[idone]");
 				KeSetSymbol(SmNetwork_Ready);
 			}
 		}
@@ -259,7 +259,7 @@ public:
 			// MISS
 			if ((ReadCSR(0) & (1 << 12)) != 0)
 			{
-				DebugOut("[rcvmiss]", 9);
+				DebugOut("[rcvmiss]");
 				WriteCSR(0, (ReadCSR(0) & 0x80F7) | (1 << 12));
 			}
 

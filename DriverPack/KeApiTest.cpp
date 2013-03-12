@@ -25,7 +25,8 @@ void Entry()
 	CNumericConverter NC;
 	dword L = NC.DwordToString(Count / 5, Buf);
 
-	DebugOut("Kernel calls per sec: ", 22);
+	DebugOut("Kernel calls per sec: ");
 	DebugOut(Buf, L);
+	DebugOutLine();
 }
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
