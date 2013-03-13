@@ -51,7 +51,7 @@ public:
 			//CreateProcess("Partition.bin");
 			//CreateProcess("FAT.bin");
 		}
-		else if (bootType == ' ddf')
+		else if ((bootType == ' 3df') || (bootType == ' 5df'))
 		{
 			CreateProcess("Partition.bin");
 			//CreateProcess("ATA.bin");

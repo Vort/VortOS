@@ -1,7 +1,7 @@
 @echo off
 
-::set FloppySize=360
-set FloppySize=1440
+set FloppySize=360
+::set FloppySize=1440
 ::set ImageType=floppy
 set ImageType=cdrom
 

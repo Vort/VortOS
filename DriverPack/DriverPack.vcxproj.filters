@@ -39,7 +39,7 @@
     <ClCompile Include="Desktop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DMA.cpp">
+    <ClCompile Include="IsaDMA.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FAT.cpp">

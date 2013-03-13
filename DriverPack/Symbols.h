@@ -34,7 +34,7 @@
 #define Sm_InitStage2 0x32FDDA6E // User Soft Allowed To Run
 
 #define Sm_Lock_Console   0xBB10D102
-#define Sm_Lock_DMA       0x2997ACA3
+#define Sm_Lock_IsaDMA    0x2997ACA3
 #define Sm_Lock_ATA       0xFD0DB86C
 #define Sm_Lock_FAT       0x8DD0DC8A
 #define Sm_Lock_CDFS      0x11F2E475

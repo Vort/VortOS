@@ -12,6 +12,11 @@ EP:
 
 ; -------------------------------------------
 Start:
+   cmp	 byte [0x7C15], 0xF0
+   je	 @f
+     mov byte [BootType + 2], '5'
+@@:
+
    mov	 dx, 0x2000  ; Load Segment
    mov	 di, File1FATName
    mov	 si, File1Size
@@ -110,7 +115,7 @@ WaitLoop:
 
 ; -------------------------------------------
    Magic	      dd 'linf'
-   BootType	      dd 'fdd '
+   BootType	      dd 'fd3 '
    FilesCount	      dd 7
 
    File1Size	      dd 0
@@ -149,7 +154,7 @@ WaitLoop:
    File2FATName       db 'FILESYS BIN'
    File3FATName       db 'FAT     BIN'
    File4FATName       db 'CACHE   BIN'
-   File5FATName       db 'DMA     BIN'
+   File5FATName       db 'ISADMA  BIN'
    File6FATName       db 'FLOPPY  BIN'
    File7FATName       db 'SYSINIT BIN'
    LastFATName:

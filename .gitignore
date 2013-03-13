@@ -12,6 +12,7 @@
 ipch
 Debug
 
+*.txt
 *.jpg
 *.suo
 *.pdb

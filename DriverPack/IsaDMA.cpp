@@ -1,12 +1,12 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// DMA.cpp
+// IsaDMA.cpp
 #include "API.h"
 
 // ----------------------------------------------------------------------------
-class CDMA
+class IsaDMA
 {
 public:
-	CDMA()
+	IsaDMA()
 	{
 		dword SMID = KeAllocSharedMem(512);
 		byte* DMAPageV = KeMapSharedMem(SMID);
@@ -42,12 +42,12 @@ public:
 
 				KeOutPortByte(0x0a, 0x06);   // mask chan 2
 				KeOutPortByte(0x0c, 0xff);   // reset flip-flop
-				KeOutPortByte(0x04, (PB(&DMAPageP))[0]); //  - address low byte
-				KeOutPortByte(0x04, (PB(&DMAPageP))[1]); //  - address high byte
-				KeOutPortByte(0x81, (PB(&DMAPageP))[2]); // external page register
+				KeOutPortByte(0x04, (DMAPageP >> 0) & 0xFF); //  - address low byte
+				KeOutPortByte(0x04, (DMAPageP >> 8) & 0xFF); //  - address high byte
+				KeOutPortByte(0x81, (DMAPageP >> 16) & 0xFF); // external page register
 				KeOutPortByte(0x0c, 0xff);   // reset flip-flop
-				KeOutPortByte(0x05, (PB(&BufSizeM1))[0]); //  - count low byte
-				KeOutPortByte(0x05, (PB(&BufSizeM1))[1]); //  - count high byte
+				KeOutPortByte(0x05, (BufSizeM1 >> 0) & 0xFF); //  - count low byte
+				KeOutPortByte(0x05, (BufSizeM1 >> 8) & 0xFF); //  - count high byte
 				KeOutPortByte(0x0b, Mode);   // set mode (see above)
 				KeOutPortByte(0x0a, 0x02);   // unmask chan 2
 
@@ -62,8 +62,8 @@ private:
 // ----------------------------------------------------------------------------
 void Entry()
 {
-	if (!KeSetSymbol(Sm_Lock_DMA))
+	if (!KeSetSymbol(Sm_Lock_IsaDMA))
 		return;
-	CDMA D;
+	IsaDMA D;
 }
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

@@ -74,7 +74,7 @@
       <Priority>7</Priority>
       <AccessLevel>1</AccessLevel>
     </ClCompile>
-    <ClCompile Include="DMA.cpp">
+    <ClCompile Include="IsaDMA.cpp">
       <Priority>3</Priority>
       <AccessLevel>0</AccessLevel>
     </ClCompile>

@@ -133,25 +133,6 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-dword CHStoLBA(byte Cyl, byte Head, byte Sect)
-{
-	return ((Cyl * 2 + Head) * 18) + Sect - 1;
-}
-
-// ----------------------------------------------------------------------------
-void LBAtoCHS(dword LBA, byte& Cyl, byte& Head, byte& Sect)
-{
-	dword CYL = LBA / (2 * 18);
-	dword TEMP = LBA % (2 * 18);
-	dword HEAD = TEMP / 18;
-	dword SECT = TEMP % 18 + 1;
-
-	Cyl = CYL & 0xFF;
-	Head = HEAD & 0xFF;
-	Sect = SECT & 0xFF;
-}
-
-// ----------------------------------------------------------------------------
 void ByteToString(byte Byte, char* Buf)
 {
 	Buf[0] = '0';
