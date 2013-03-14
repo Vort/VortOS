@@ -81,11 +81,6 @@ public:
 
 		m_DMABuffer = 0;
 
-		KeWaitForSymbol(SmDMA_Ready);
-		KeWaitForSymbol(SmCache_Ready);
-		KeWaitForSymbol(SmFileSystem_Ready);
-		KeEnableNotification(NfKe_TimerTick);
-		KeEnableNotification(NfKe_TerminateProcess);
 		KeLinkIrq(6);
 
 		// Figure 8-3
@@ -99,7 +94,7 @@ public:
 		// Program data rate
 		if (floppySize == 1440)
 			KeOutPortByte(m_CCR, 0x00); // 500kbps
-		else if (floppySize == 360)
+		else if (floppySize == 360) // In 720k or 1200k drive
 			KeOutPortByte(m_CCR, 0x01); // 300kbps
 
 		WaitForInterrupt();
@@ -159,7 +154,11 @@ public:
 		if (noDiskFound)
 			return;
 
-
+		KeWaitForSymbol(SmDMA_Ready);
+		KeWaitForSymbol(SmCache_Ready);
+		KeWaitForSymbol(SmFileSystem_Ready);
+		KeEnableNotification(NfKe_TimerTick);
+		KeEnableNotification(NfKe_TerminateProcess);
 		KeEnableCallRequest(ClFloppy_ReadSector);
 
 		CStorageDeviceInfo SDI;
