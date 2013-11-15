@@ -3,16 +3,23 @@ org 0xAC00
 use16
 
 ; -------------------------------------------
+; From boot sector
+virtual at 0x7C15
+   mediaType db ?
+end virtual
+
+; -------------------------------------------
 EP:
    jmp	 Start
 
 ; -------------------------------------------
-   FindFileFunc   dw 0x0000
-   ReadFileFunc   dw 0x0000
+   ; Will be filled by boot sector
+   FindFileFunc   dw ?
+   ReadFileFunc   dw ?
 
 ; -------------------------------------------
 Start:
-   cmp	 byte [0x7C15], 0xF0
+   cmp	 [mediaType], 0xF0
    je	 @f
      mov byte [BootType + 2], '5'
 @@:
